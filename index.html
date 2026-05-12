@@ -3,129 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Relay Super App | Enterprise Build</title>
+    <title>Relay Super App | Production</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <style>
         :root {
-            --orange: #FF9800; --bg: #F2F4F7; --white: #ffffff;
-            --side-w: 65px; --dock-h: 75px;
+            --orange: #FF9800; --grey: #F2F4F7; --white: #ffffff;
+            --side-w: 70px; --header-h: 60px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; height: 100vh; display: flex; overflow: hidden; }
+        /* Prevent overlapping and force layout boxes */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--grey); height: 100vh; display: grid; grid-template-columns: var(--side-w) 1fr; overflow: hidden; }
 
-        /* --- SIDEBAR --- */
-        .sidebar { width: var(--side-w); background: var(--white); border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; padding: 25px 0; gap: 30px; z-index: 100; }
-        .side-btn { color: #888; cursor: pointer; transition: 0.2s; }
-        .side-btn:hover { color: var(--orange); }
+        /* SIDEBAR: Always touchable on the far left */
+        .sidebar { background: var(--white); border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; padding-top: 30px; gap: 35px; z-index: 1000; }
+        .s-btn { color: #888; cursor: pointer; pointer-events: auto; }
 
-        /* --- MAIN CONTAINER --- */
-        .viewport { flex: 1; display: flex; flex-direction: column; position: relative; height: 100vh; width: calc(100% - var(--side-w)); }
+        /* MAIN APP AREA */
+        .app-shell { display: grid; grid-template-rows: var(--header-h) 1fr; height: 100vh; position: relative; }
 
-        /* --- HEADER --- */
-        header { height: 60px; background: var(--orange); color: white; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; z-index: 50; }
-        .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 900; }
+        header { background: var(--orange); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 900; }
+        .logo-box { display: flex; align-items: center; gap: 8px; font-weight: 800; pointer-events: auto; }
 
-        /* --- VIEWS --- */
-        .view-layer { flex: 1; position: relative; overflow-y: auto; padding-bottom: 160px; }
-        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* VIEW CONTAINER */
+        .main-view { overflow-y: auto; position: relative; z-index: 100; padding-bottom: 180px; }
+        .view { display: none; padding: 20px; }
+        .view.active { display: block; }
 
-        /* --- HOME PAGE UI --- */
-        .section-label { color: #888; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; display: block; }
-        .action-card { background: white; padding: 18px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #eee; cursor: pointer; }
-        .card-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; }
+        /* HOME SCREEN CARDS */
+        .card { background: white; padding: 20px; border-radius: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; pointer-events: auto; }
+        .icon-circle { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; }
 
-        /* --- CHAT UI --- */
-        #chat-stream { display: flex; flex-direction: column; gap: 10px; }
-        .bubble { background: white; padding: 12px 16px; border-radius: 18px 18px 18px 4px; align-self: flex-start; max-width: 85%; font-size: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-        .tick-mark { color: var(--orange); font-size: 10px; font-weight: 800; text-align: right; margin-top: 2px; }
+        /* CHAT BUBBLES */
+        .chat-flow { display: flex; flex-direction: column; gap: 12px; }
+        .bubble { background: white; padding: 12px 16px; border-radius: 18px 18px 18px 4px; align-self: flex-start; max-width: 85%; font-size: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .tick { color: var(--orange); font-size: 10px; font-weight: 900; text-align: right; margin-top: 4px; display: block; }
 
-        /* --- INTERFACE --- */
-        .fab { position: fixed; bottom: 145px; right: 20px; width: 60px; height: 60px; background: var(--orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,152,0,0.3); z-index: 80; cursor: pointer; }
-        
-        .input-floating { position: fixed; bottom: 85px; left: calc(var(--side-w) + 15px); right: 15px; background: white; border-radius: 30px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); z-index: 70; border: 1px solid #eee; }
-        .input-floating input { flex: 1; border: none; outline: none; font-size: 15px; }
+        /* DOCK & FAB: Forced to front with high Z-Index */
+        .fab { position: fixed; bottom: 150px; right: 20px; width: 60px; height: 60px; background: var(--orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,152,0,0.4); z-index: 2000; pointer-events: auto; }
 
-        /* --- macOS DOCK --- */
-        .dock { position: fixed; bottom: 15px; left: calc(50% + 32px); transform: translateX(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 35px; display: flex; gap: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05); z-index: 200; }
-        .dock-btn { display: flex; flex-direction: column; align-items: center; color: #999; border: none; background: none; cursor: pointer; min-width: 50px; }
-        .dock-btn.active { color: var(--orange); }
-        .dock-btn span { font-size: 9px; font-weight: 800; margin-top: 4px; }
+        .dock { position: fixed; bottom: 15px; left: calc(50% + 35px); transform: translateX(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 35px; display: flex; gap: 20px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); border: 1px solid #eee; z-index: 2500; }
+        .d-btn { display: flex; flex-direction: column; align-items: center; color: #999; border: none; background: none; min-width: 50px; pointer-events: auto; }
+        .d-btn.active { color: var(--orange); }
+        .d-btn label { font-size: 9px; font-weight: 800; margin-top: 4px; }
 
-        #cam-stage { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; }
+        .input-bar { position: fixed; bottom: 85px; left: calc(var(--side-w) + 15px); right: 15px; background: white; border-radius: 30px; padding: 10px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); z-index: 1500; border: 1px solid #eee; }
+        .input-bar input { flex: 1; border: none; outline: none; font-size: 15px; }
+
+        #cam-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <i data-lucide="layout-grid" class="side-btn"></i>
-        <i data-lucide="home" class="side-btn"></i>
-        <i data-lucide="briefcase" class="side-btn"></i>
-        <i data-lucide="users" class="side-btn"></i>
-        <i data-lucide="mail" class="side-btn"></i>
-    </div>
+    <aside class="sidebar">
+        <i data-lucide="layout-grid" class="s-btn" onclick="alert('Sidebar Active')"></i>
+        <i data-lucide="home" class="s-btn"></i>
+        <i data-lucide="briefcase" class="s-btn"></i>
+        <i data-lucide="users" class="s-btn"></i>
+        <i data-lucide="mail" class="s-btn"></i>
+    </aside>
 
-    <div class="viewport">
+    <main class="app-shell">
         <header>
-            <div class="brand" onclick="startCamera()">
-                <i data-lucide="aperture"></i>
+            <div class="logo-box" onclick="launchCamera()">
+                <i data-lucide="aperture" size="24"></i>
                 <span>RELAY</span>
             </div>
-            <div style="display:flex; gap:15px;">
-                <i data-lucide="search" style="cursor:pointer"></i>
-                <i data-lucide="more-vertical" style="cursor:pointer"></i>
+            <div style="display:flex; gap:15px; align-items:center;">
+                <i data-lucide="search" size="20"></i>
+                <i data-lucide="more-vertical" size="22" onclick="alert('Menu Clicked')"></i>
             </div>
         </header>
 
-        <div class="view-layer">
-            <div id="home-view" class="page active">
-                <span class="section-label">Quick Actions</span>
-                <div class="action-card" onclick="navTo('chat-view', 'dock-chat')">
-                    <div class="card-icon" style="background:var(--orange)"><i data-lucide="message-circle"></i></div>
-                    <div><strong>Messages</strong><small style="display:block;color:#888">Continue your conversations</small></div>
+        <section class="main-view">
+            <div id="home-v" class="view active">
+                <h3 style="margin-bottom:20px;">Welcome Home</h3>
+                <div class="card" onclick="goTo('chat-v', 'd-chat')">
+                    <div class="icon-circle" style="background:var(--orange)"><i data-lucide="message-square"></i></div>
+                    <div><strong>Messages</strong><p style="font-size:12px;color:#888">Open Chat Interface</p></div>
                 </div>
-                <div class="action-card">
-                    <div class="card-icon" style="background:#4CAF50"><i data-lucide="phone"></i></div>
-                    <div><strong>Voice Calls</strong><small style="display:block;color:#888">Call friends and family</small></div>
-                </div>
-                <div class="action-card">
-                    <div class="card-icon" style="background:#2196F3"><i data-lucide="globe"></i></div>
-                    <div><strong>Relay AI</strong><small style="display:block;color:#888">Search with intelligence</small></div>
+                <div class="card">
+                    <div class="icon-circle" style="background:#4CAF50"><i data-lucide="phone"></i></div>
+                    <div><strong>Calls</strong><p style="font-size:12px;color:#888">Recent activity</p></div>
                 </div>
             </div>
 
-            <div id="chat-view" class="page">
-                <div id="chat-stream">
-                    <div class="bubble">Home Page is now the default landing view. All icons are active.</div>
-                    <div class="tick-mark">✓✓</div>
+            <div id="chat-v" class="view">
+                <div class="chat-flow" id="chat-box">
+                    <div class="bubble">Chat initialized. Buttons are now physically isolated for touch.</div>
+                    <span class="tick">✓✓</span>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="fab"><i data-lucide="plus" size="28"></i></div>
+        <div class="fab"><i data-lucide="plus" size="30"></i></div>
 
-        <div class="input-floating" id="msg-bar" style="display:none">
-            <i data-lucide="paperclip" color="#999"></i>
-            <input type="text" id="m-in" placeholder="Type a message...">
-            <button id="send-btn" style="background:none; border:none; color:var(--orange)"><i data-lucide="send"></i></button>
+        <div class="input-bar" id="input-ui" style="display:none;">
+            <i data-lucide="paperclip" size="20" color="#888"></i>
+            <input type="text" id="m-val" placeholder="Type message...">
+            <button id="send" style="background:none; border:none; color:var(--orange)"><i data-lucide="send" size="22"></i></button>
         </div>
 
         <nav class="dock">
-            <button class="dock-btn active" id="dock-home" onclick="navTo('home-view', 'dock-home')">
-                <i data-lucide="home"></i><span>HOME</span>
+            <button class="d-btn active" id="d-home" onclick="goTo('home-v', 'd-home')">
+                <i data-lucide="home"></i><label>HOME</label>
             </button>
-            <button class="dock-btn" id="dock-chat" onclick="navTo('chat-view', 'dock-chat')">
-                <i data-lucide="message-square"></i><span>CHATS</span>
+            <button class="d-btn" id="d-chat" onclick="goTo('chat-v', 'd-chat')">
+                <i data-lucide="message-square"></i><label>CHATS</label>
             </button>
-            <button class="dock-btn"><i data-lucide="video"></i><span>VIDEO</span></button>
-            <button class="dock-btn"><i data-lucide="sparkles"></i><span>AI</span></button>
+            <button class="d-btn"><i data-lucide="phone"></i><label>CALLS</label></button>
+            <button class="d-btn"><i data-lucide="sparkles"></i><label>AI</label></button>
         </nav>
-    </div>
+    </main>
 
-    <div id="cam-stage"><button onclick="location.reload()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); background:red; color:white; padding:15px 40px; border-radius:30px; border:none; font-weight:bold;">CLOSE</button></div>
+    <div id="cam-overlay">
+        <button onclick="location.reload()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); background:red; color:white; padding:15px 40px; border-radius:35px; border:none; font-weight:bold;">EXIT</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -147,35 +141,33 @@
 
         lucide.createIcons();
 
-        // --- NAVIGATION LOGIC ---
-        window.navTo = (viewId, dockId) => {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.dock-btn').forEach(d => d.classList.remove('active'));
+        window.goTo = (viewId, dockId) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.d-btn').forEach(d => d.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
             document.getElementById(dockId).classList.add('active');
-            document.getElementById('msg-bar').style.display = (viewId === 'chat-view') ? 'flex' : 'none';
+            document.getElementById('input-ui').style.display = (viewId === 'chat-v') ? 'flex' : 'none';
         };
 
-        window.startCamera = async () => {
-            document.getElementById('cam-stage').style.display = 'block';
+        window.launchCamera = async () => {
+            document.getElementById('cam-overlay').style.display = 'block';
             const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
             await client.join("cf58cde3ad4b45b29b65dc4e01b92ae1", "relay-room", null);
             const track = await AgoraRTC.createCameraVideoTrack();
-            track.play('cam-stage');
+            track.play('cam-overlay');
             await client.publish([track]);
         };
 
-        document.getElementById('send-btn').onclick = () => {
-            const val = document.getElementById('m-in').value;
-            if(val) { push(chatRef, { text: val }); document.getElementById('m-in').value = ""; }
+        document.getElementById('send').onclick = () => {
+            const val = document.getElementById('m-val').value;
+            if(val) { push(chatRef, { text: val }); document.getElementById('m-val').value = ""; }
         };
 
         onChildAdded(chatRef, (s) => {
-            const stream = document.getElementById('chat-stream');
+            const box = document.getElementById('chat-box');
             const div = document.createElement('div');
-            div.innerHTML = `<div class="bubble">${s.val().text}</div><div class="tick-mark">✓✓</div>`;
-            stream.appendChild(div);
-            document.getElementById('chat-view').scrollTop = stream.scrollHeight;
+            div.innerHTML = `<div class="bubble">${s.val().text}</div><span class="tick">✓✓</span>`;
+            box.appendChild(div);
         });
     </script>
 </body>
