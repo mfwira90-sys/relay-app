@@ -1,259 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relay Messaging</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Relay Messaging UI</title>
 
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<!-- Material Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
-body{background:#ececec;overflow:hidden;}
-
-.app{display:flex;height:100vh;width:100%;}
-
-/* SIDEBAR */
-.sidebar{
-width:80px;background:#f6f6f6;border-right:1px solid #ddd;
-display:flex;flex-direction:column;align-items:center;padding-top:15px;gap:15px;
+:root{
+  --orange:#FF8C42;
+  --orange2:#FFAB76;
+  --grey:#B0A8B9;
+  --bg:#1f1f23;
+  --glass:rgba(255,255,255,0.08);
+  --blur:14px;
+  --green:#7ECB9A;
+  --yellow:#F4D35E;
 }
 
-.side-btn{
-width:55px;height:55px;border-radius:18px;
-display:flex;align-items:center;justify-content:center;
-cursor:pointer;color:#666;transition:.2s;
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
+
+body{
+  background:linear-gradient(145deg,#1c1c20,#2a2a30);
+  color:white;
+  height:100vh;
+  overflow:hidden;
 }
-
-.side-btn:hover{background:#ffb36b;color:#fff;}
-.side-btn.active{background:#ff8c2f;color:#fff;}
-
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;position:relative;}
 
 /* HEADER */
-.header{
-height:75px;background:#f8f8f8;border-bottom:1px solid #ddd;
-display:flex;align-items:center;justify-content:space-between;padding:0 15px;
+header{
+  position:sticky;
+  top:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 14px;
+  background:var(--glass);
+  backdrop-filter:blur(var(--blur));
+  border-bottom:1px solid rgba(255,255,255,0.05);
 }
 
 .logo{
-width:50px;height:50px;border-radius:18px;background:#ff8c2f;
-display:flex;align-items:center;justify-content:center;
-color:#fff;cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
 }
 
-.search{
-display:flex;align-items:center;background:#eee;
-padding:8px 12px;border-radius:18px;width:200px;
+.logo .material-icons{
+  color:var(--orange);
 }
 
-.search input{
-border:none;background:transparent;outline:none;width:100%;
+.search-pill{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+  cursor:pointer;
 }
 
-.icon-btn{
-width:42px;height:42px;border-radius:14px;
-display:flex;align-items:center;justify-content:center;
-background:#eee;cursor:pointer;
+/* SIDEBAR */
+.sidebar{
+  position:absolute;
+  top:60px;
+  left:0;
+  width:70px;
+  height:calc(100% - 120px);
+  background:var(--glass);
+  backdrop-filter:blur(var(--blur));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:10px;
 }
 
-/* CHAT */
-.chat-area{flex:1;overflow:auto;padding:10px;}
+.side-item{
+  margin:12px 0;
+  text-align:center;
+  font-size:10px;
+  color:#ddd;
+  cursor:pointer;
+}
+
+.side-item .material-icons{
+  display:block;
+  color:#ccc;
+}
+
+.side-item.active .material-icons{
+  color:var(--orange);
+  filter:drop-shadow(0 0 6px var(--orange));
+}
+
+/* MAIN */
+.main{
+  margin-left:70px;
+  padding:12px;
+}
+
+/* AI SEARCH */
+.ai-search{
+  margin:10px 0;
+  padding:12px;
+  border-radius:18px;
+  background:linear-gradient(135deg,rgba(255,140,66,0.2),rgba(255,255,255,0.05));
+  border:1px solid rgba(255,140,66,0.3);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  gap:10px;
+  margin:10px 0;
+}
+
+.tab{
+  padding:6px 12px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.08);
+  font-size:12px;
+}
+
+.tab.relay{border:1px solid var(--orange);}
+.tab.sms{border:1px solid var(--green);}
+.tab.email{border:1px solid var(--yellow);}
+
+/* CHAT LIST */
+.chat-list{
+  margin-top:10px;
+  height:60vh;
+  overflow:auto;
+}
 
 .chat{
-background:#fff;padding:14px;border-radius:18px;
-display:flex;justify-content:space-between;margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.05);
+  transition:0.2s;
+}
+
+.chat:hover{
+  background:rgba(255,255,255,0.08);
 }
 
 .avatar{
-width:45px;height:45px;border-radius:15px;
-background:#ffb36b;display:flex;align-items:center;justify-content:center;
-color:#fff;font-weight:bold;
+  width:40px;height:40px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--orange2),var(--grey));
 }
+
+.chat-info{
+  flex:1;
+  margin-left:10px;
+}
+
+.chat-name{
+  font-weight:600;
+}
+
+.chat-msg{
+  font-size:12px;
+  color:#bbb;
+}
+
+/* STATUS TICKS */
+.tick.sent{color:var(--orange2);}
+.tick.received{color:var(--grey);}
+.tick.read{color:#aaa;}
 
 /* FAB */
 .fab{
-position:absolute;right:20px;bottom:90px;
-width:60px;height:60px;border-radius:20px;
-background:#ff8c2f;color:#fff;
-display:flex;align-items:center;justify-content:center;
-cursor:pointer;
+  position:fixed;
+  bottom:80px;
+  right:20px;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 10px 20px rgba(0,0,0,0.4);
 }
 
-/* BOTTOM */
-.bottom{
-position:absolute;bottom:0;width:100%;height:70px;
-background:#f8f8f8;border-top:1px solid #ddd;
-display:flex;align-items:center;justify-content:center;
+.fab-menu{
+  position:absolute;
+  bottom:70px;
+  right:0;
+  display:none;
+  flex-direction:column;
+  gap:8px;
 }
 
+.fab:hover .fab-menu{
+  display:flex;
+}
+
+.fab-item{
+  background:rgba(255,255,255,0.1);
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:12px;
+}
+
+/* BOTTOM DOCK */
 .dock{
-display:flex;gap:25px;background:#fff;
-padding:10px 20px;border-radius:25px;
+  position:fixed;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(20px);
+  border-radius:20px;
+  display:flex;
+  gap:20px;
+  padding:10px 20px;
 }
 
-.dock div{cursor:pointer;text-align:center;font-size:12px;}
-
-/* MENU */
-.menu{
-position:absolute;right:10px;top:75px;
-width:260px;background:#fff;border-radius:18px;
-box-shadow:0 10px 30px rgba(0,0,0,.2);
-display:none;padding:10px;
+.dock-item{
+  text-align:center;
+  font-size:10px;
+  color:#ccc;
 }
 
-.menu.active{display:block;}
-
-.menu div{
-padding:10px;border-bottom:1px solid #eee;
-cursor:pointer;font-size:14px;
+.dock-item .material-icons{
+  display:block;
 }
 
-/* CAMERA */
-#cameraBox{
-position:fixed;top:50%;left:50%;
-transform:translate(-50%,-50%);
-width:300px;border-radius:15px;
-display:none;z-index:999;
+.active-dot{
+  width:6px;height:6px;
+  background:var(--orange);
+  border-radius:50%;
+  margin:2px auto 0;
 }
-
-video{width:100%;border-radius:15px;}
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<header>
+  <div class="logo" onclick="alert('Camera Open')">
+    <span class="material-icons">camera_alt</span>
+    <b>Relay</b>
+  </div>
+
+  <div class="search-pill">
+    <span class="material-icons">search</span>
+    Search
+  </div>
+
+  <span class="material-icons">more_vert</span>
+</header>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-
-<div class="side-btn active" onclick="go('Home')"><span class="material-icons-round">home</span></div>
-<div class="side-btn" onclick="go('Work')"><span class="material-icons-round">work</span></div>
-<div class="side-btn" onclick="go('Team')"><span class="material-icons-round">groups</span></div>
-<div class="side-btn" onclick="go('SMS')"><span class="material-icons-round">sms</span></div>
-
+  <div class="side-item active"><span class="material-icons">home</span>Home</div>
+  <div class="side-item"><span class="material-icons">work</span>Work</div>
+  <div class="side-item"><span class="material-icons">groups</span>Team</div>
+  <div class="side-item"><span class="material-icons">people</span>Friends</div>
+  <div class="side-item"><span class="material-icons">sms</span>SMS</div>
+  <div class="side-item"><span class="material-icons">email</span>Email</div>
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
-<!-- HEADER -->
-<div class="header">
+  <div class="ai-search">
+    <span class="material-icons">auto_awesome</span>
+    Ask anything...
+  </div>
 
-<div class="logo" onclick="openCamera()">
-<span class="material-icons-round">camera_alt</span>
-</div>
+  <div class="tabs">
+    <div class="tab relay">Relay</div>
+    <div class="tab sms">SMS</div>
+    <div class="tab email">Email</div>
+  </div>
 
-<div class="search">
-<span class="material-icons-round">search</span>
-<input id="search" onkeyup="searchChat()" placeholder="Search...">
-</div>
+  <div class="chat-list">
 
-<div class="icon-btn" onclick="toggleMenu()">
-<span class="material-icons-round">more_vert</span>
-</div>
+    <div class="chat">
+      <div class="avatar"></div>
+      <div class="chat-info">
+        <div class="chat-name">Alex</div>
+        <div class="chat-msg">Hey, are you coming?</div>
+      </div>
+      <div class="tick read">✔✔</div>
+    </div>
 
-</div>
+    <div class="chat">
+      <div class="avatar"></div>
+      <div class="chat-info">
+        <div class="chat-name">Team Alpha</div>
+        <div class="chat-msg">Project updated</div>
+      </div>
+      <div class="tick received">✔</div>
+    </div>
 
-<!-- MENU -->
-<div class="menu" id="menu">
-<div onclick="go('Profile')">Profile</div>
-<div onclick="go('Settings')">Settings</div>
-<div onclick="go('Security')">Security</div>
-<div onclick="go('Help')">Help</div>
-</div>
+    <div class="chat">
+      <div class="avatar"></div>
+      <div class="chat-info">
+        <div class="chat-name">Sara</div>
+        <div class="chat-msg">Call me later</div>
+      </div>
+      <div class="tick sent">✔</div>
+    </div>
 
-<!-- CHAT -->
-<div class="chat-area" id="chatArea">
-
-<div class="chat"><div class="avatar">A</div><div>Alex</div></div>
-<div class="chat"><div class="avatar">J</div><div>Jessica</div></div>
-<div class="chat"><div class="avatar">R</div><div>Ryan</div></div>
-
+  </div>
 </div>
 
 <!-- FAB -->
-<div class="fab" onclick="newChat()">
-<span class="material-icons-round">add</span>
+<div class="fab">
+  <span class="material-icons">add</span>
+
+  <div class="fab-menu">
+    <div class="fab-item">+ New Chat</div>
+    <div class="fab-item">People</div>
+  </div>
 </div>
 
-<!-- BOTTOM -->
-<div class="bottom">
-
+<!-- BOTTOM DOCK -->
 <div class="dock">
-<div onclick="go('Chats')">Chats</div>
-<div onclick="go('Contacts')">Contacts</div>
-<div onclick="go('Calls')">Calls</div>
-<div onclick="go('AI')">AI</div>
+  <div class="dock-item">
+    <span class="material-icons">chat</span>
+    Chats
+    <div class="active-dot"></div>
+  </div>
+
+  <div class="dock-item">
+    <span class="material-icons">contacts</span>
+    Contacts
+  </div>
+
+  <div class="dock-item">
+    <span class="material-icons">auto_awesome_motion</span>
+    Status
+  </div>
+
+  <div class="dock-item">
+    <span class="material-icons">video_call</span>
+    Calls
+  </div>
 </div>
-
-</div>
-
-</div>
-</div>
-
-<!-- CAMERA -->
-<div id="cameraBox">
-<video id="video" autoplay></video>
-</div>
-
-<script>
-
-function go(x){
-alert(x + " clicked");
-}
-
-/* MENU */
-function toggleMenu(){
-document.getElementById("menu").classList.toggle("active");
-}
-
-/* SEARCH */
-function searchChat(){
-let val=document.getElementById("search").value.toLowerCase();
-let chats=document.querySelectorAll(".chat");
-
-chats.forEach(c=>{
-c.style.display=c.innerText.toLowerCase().includes(val)?"flex":"none";
-});
-}
-
-/* NEW CHAT */
-function newChat(){
-let name=prompt("New chat name:");
-if(!name) return;
-
-let div=document.createElement("div");
-div.className="chat";
-div.innerHTML=`<div class="avatar">${name[0]}</div><div>${name}</div>`;
-document.getElementById("chatArea").prepend(div);
-}
-
-/* CAMERA FIXED */
-async function openCamera(){
-try{
-
-let stream=await navigator.mediaDevices.getUserMedia({video:true});
-
-let video=document.getElementById("video");
-let box=document.getElementById("cameraBox");
-
-video.srcObject=stream;
-box.style.display="block";
-
-}catch(e){
-alert("Camera blocked or not supported");
-}
-}
-
-/* CLOSE CAMERA ON CLICK */
-document.getElementById("cameraBox").onclick=function(){
-this.style.display="none";
-}
-
-</script>
 
 </body>
 </html>
