@@ -7,21 +7,26 @@
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <style>
         :root { --soft-orange: #FF9800; --soft-grey: #F5F5F5; }
-        body { font-family: sans-serif; background: var(--soft-grey); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: sans-serif; background: var(--soft-grey); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { background: var(--soft-orange); color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         #chat { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px; border-radius: 10px; max-width: 75%; background: white; border: 1px solid #ddd; }
+        .msg { padding: 10px; border-radius: 10px; max-width: 75%; background: white; border: 1px solid #ddd; word-wrap: break-word; }
         .input-area { background: white; padding: 15px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
-        input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        input { flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        #video-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; }
+        .end-call { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: red; color: white; padding: 15px 30px; border-radius: 50px; border: none; font-weight: bold; }
     </style>
 </head>
 <body>
-    <header><span>Relay</span><span id="call" style="cursor:pointer; font-size: 1.5rem;">📞</span></header>
-    <div id="chat"><div class="msg">Welcome to Relay! Use the phone icon to call.</div></div>
+    <header><span>Relay</span><span id="call-btn" style="cursor:pointer; font-size: 1.5rem;">📞</span></header>
+    <div id="video-container"><button class="end-call" id="end-btn">End Call</button></div>
+    <div id="chat"><div class="msg">Welcome to Relay! Tap the phone icon to start a video call.</div></div>
     <div class="input-area"><input type="text" id="in" placeholder="Message Relay..."><button id="btn" style="border:none; background:none; font-size:1.5rem;">➤</button></div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyDC1a-bGXLrA8SqWPE4LTGlNNWb9PXql04",
             authDomain: "gen-lang-client-0720380653.firebaseapp.com",
@@ -31,21 +36,40 @@
             messagingSenderId: "128069738880",
             appId: "1:128069738880:web:60a8f36bf359ebf9e06165"
         };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const chatRef = ref(db, "messages");
-        const agoraAppId = "cf58cde3ad4b45b29b65dc4e01b92ae1";
+
+        // Chat Logic
         document.getElementById('btn').onclick = () => {
             const val = document.getElementById('in').value;
-            if(val) { push(chatRef, { sender: 'user', text: val }); document.getElementById('in').value = ""; }
+            if(val) { push(chatRef, { text: val }); document.getElementById('in').value = ""; }
         };
         onChildAdded(chatRef, (s) => {
-            const d = s.val();
-            const m = document.createElement('div');
-            m.className = 'msg';
-            m.innerText = d.text;
-            document.getElementById('chat').appendChild(m);
+            const m = document.createElement('div'); m.className = 'msg';
+            m.innerText = s.val().text; document.getElementById('chat').appendChild(m);
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
         });
+
+        // Video Logic
+        const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        const callBtn = document.getElementById('call-btn');
+        const videoCont = document.getElementById('video-container');
+
+        callBtn.onclick = async () => {
+            videoCont.style.display = "block";
+            const uid = await client.join("cf58cde3ad4b45b29b65dc4e01b92ae1", "relay-room", null);
+            const localTrack = await AgoraRTC.createCameraVideoTrack();
+            localTrack.play(videoCont);
+            await client.publish([localTrack]);
+        };
+
+        document.getElementById('end-btn').onclick = async () => {
+            await client.leave();
+            videoCont.style.display = "none";
+            location.reload();
+        };
     </script>
 </body>
 </html>
