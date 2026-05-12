@@ -1,391 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Relay Messaging</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Relay Messaging | Professional Build</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --orange: #FF9800; --grey: #F2F4F7; --white: #ffffff;
+            --sms-green: #4CAF50; --email-yellow: #FFD54F;
+            --side-w: 65px; --header-h: 60px;
+        }
 
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--grey); height: 100vh; display: flex; overflow: hidden; }
 
-<style>
-:root{
-  --orange:#FF8C42;
-  --orange2:#FFAB76;
-  --grey:#EAE4E6;
-  --dark:#2b2b2b;
-}
+        /* --- SIDEBAR --- */
+        .sidebar { width: var(--side-w); background: var(--white); border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 25px; z-index: 1000; }
+        .s-btn { color: #888; cursor: pointer; transition: 0.2s; }
+        .s-btn.active { color: var(--orange); }
 
-body{
-  margin:0;
-  font-family:Arial;
-  background:var(--grey);
-  overflow:hidden;
-}
+        /* --- MAIN CONTAINER --- */
+        .app-shell { flex: 1; display: flex; flex-direction: column; position: relative; height: 100vh; }
 
-/* HEADER */
-.header{
-  height:55px;
-  background:linear-gradient(90deg,var(--orange2),var(--orange));
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 10px;
-  color:#fff;
-}
+        /* --- HEADER --- */
+        header { height: var(--header-h); background: var(--orange); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo-box { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 800; }
+        .h-actions { display: flex; align-items: center; gap: 12px; }
+        .search-bubble { background: rgba(255,255,255,0.2); padding: 6px; border-radius: 50%; display: flex; align-items: center; cursor: pointer; }
 
-.icon-btn{
-  cursor:pointer;
-  user-select:none;
-}
+        /* --- VIEWPORT --- */
+        .viewport { flex: 1; overflow-y: auto; position: relative; z-index: 100; padding-bottom: 180px; }
+        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* LAYOUT */
-.container{
-  display:flex;
-  height:calc(100vh - 110px);
-}
+        /* --- CHAT LIST (SWIPE & PIN) --- */
+        .chat-item { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; position: relative; transition: transform 0.3s; cursor: pointer; border: 1px solid #eee; overflow: hidden; }
+        .chat-item.pinned { border-left: 5px solid var(--orange); }
+        .swipe-action { position: absolute; right: -100px; height: 100%; width: 100px; background: #ff4444; color: white; display: flex; align-items: center; justify-content: center; top: 0; }
 
-/* SIDEBAR */
-.sidebar{
-  width:80px;
-  background:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding-top:10px;
-  gap:15px;
-  border-right:1px solid #ddd;
-}
+        /* --- CHAT TABS --- */
+        .chat-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+        .t-relay { background: #FFF3E0; color: var(--orange); border: 1px solid var(--orange); }
+        .t-sms { background: #E8F5E9; color: var(--sms-green); }
+        .t-email { background: #FFFDE7; color: var(--email-yellow); }
 
-.side-item{
-  font-size:11px;
-  text-align:center;
-  cursor:pointer;
-}
+        /* --- macOS DOCK --- */
+        .mac-dock { position: fixed; bottom: 15px; left: 56%; transform: translateX(-50%); background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); padding: 10px 20px; border-radius: 35px; display: flex; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 3000; border: 1px solid rgba(0,0,0,0.1); }
+        .dock-btn { display: flex; flex-direction: column; align-items: center; color: #777; border: none; background: none; min-width: 55px; cursor: pointer; }
+        .dock-btn.active { color: var(--orange); }
+        .dock-btn label { font-size: 8px; font-weight: 800; margin-top: 4px; text-transform: uppercase; }
 
-/* MAIN */
-.main{
-  flex:1;
-  overflow:auto;
-  padding:10px;
-}
+        /* --- FAB --- */
+        .fab { position: fixed; bottom: 150px; right: 20px; width: 60px; height: 60px; background: var(--orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,152,0,0.4); z-index: 2500; cursor: pointer; }
 
-/* CHAT ITEM */
-.chat{
-  background:#fff;
-  padding:10px;
-  margin-bottom:8px;
-  border-radius:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  transition:0.2s;
-  touch-action: pan-y;
-  position:relative;
-}
+        /* --- MENU --- */
+        #mega-menu { display: none; position: absolute; top: 65px; right: 15px; background: white; width: 260px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 4000; border: 1px solid #eee; overflow-y: auto; max-height: 80vh; }
+        .m-header { padding: 10px 15px; background: #f8f8f8; font-size: 10px; font-weight: 900; color: #999; }
+        .m-item { padding: 12px 15px; display: flex; align-items: center; gap: 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
 
-.chat.swipe-left{
-  transform:translateX(-80px);
-  background:#ffe5e5;
-}
-
-.chat-actions{
-  position:absolute;
-  right:-80px;
-  top:0;
-  height:100%;
-  width:80px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:12px;
-}
-
-.delete{
-  background:red;
-}
-
-.archive{
-  background:orange;
-}
-
-/* BOTTOM NAV */
-.bottom{
-  height:55px;
-  background:#fff;
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  border-top:1px solid #ddd;
-}
-
-.tab{
-  text-align:center;
-  font-size:11px;
-  cursor:pointer;
-}
-
-/* FAB */
-.fab{
-  position:fixed;
-  right:15px;
-  bottom:70px;
-  background:var(--orange);
-  width:55px;
-  height:55px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:30px;
-  cursor:pointer;
-}
-
-/* CAMERA */
-.camera{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:black;
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-video{
-  width:100%;
-  max-height:70%;
-}
-
-.snap{
-  margin-top:10px;
-  background:var(--orange);
-  padding:10px 20px;
-  color:#fff;
-  border-radius:20px;
-  cursor:pointer;
-}
-
-.closeCam{
-  position:absolute;
-  top:10px;
-  right:10px;
-  color:#fff;
-  cursor:pointer;
-}
-
-/* STATUS / CALLS / AI */
-.page{
-  display:none;
-}
-.page.active{
-  display:block;
-}
-
-.small-note{
-  font-size:12px;
-  color:#666;
-}
-</style>
+        /* --- CAMERA OVERLAY --- */
+        #camera-app { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; color: white; flex-direction: column; align-items: center; justify-content: center; }
+        .shutter { width: 70px; height: 70px; border-radius: 50%; border: 5px solid white; background: transparent; cursor: pointer; margin-top: 50px; }
+    </style>
 </head>
-
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div onclick="openCamera()">📷 Relay</div>
+    <aside class="sidebar">
+        <i data-lucide="home" class="s-btn active"></i>
+        <i data-lucide="briefcase" class="s-btn"></i>
+        <i data-lucide="users" class="s-btn"></i>
+        <i data-lucide="heart" class="s-btn"></i>
+        <i data-lucide="message-circle" class="s-btn"></i>
+        <i data-lucide="mail" class="s-btn"></i>
+    </aside>
 
-  <div style="display:flex;gap:10px;align-items:center;">
-    🔍
-    ☰
-  </div>
-</div>
+    <div class="app-shell">
+        <header>
+            <div class="logo-box" onclick="openCam()">
+                <i data-lucide="aperture" size="28"></i>
+                <span>RELAY</span>
+            </div>
+            <div class="h-actions">
+                <div class="search-bubble"><i data-lucide="search" size="18"></i></div>
+                <i data-lucide="more-vertical" onclick="toggleMenu()" style="cursor:pointer"></i>
+            </div>
+        </header>
 
-<!-- MAIN -->
-<div class="container">
+        <div id="mega-menu">
+            <div class="m-header">PROFILE</div>
+            <div class="m-item"><i data-lucide="user"></i> Display/Background</div>
+            <div class="m-item"><i data-lucide="edit"></i> Edit Name & Bio</div>
+            <div class="m-header">ACCOUNT</div>
+            <div class="m-item"><i data-lucide="shield"></i> P2P Encryption</div>
+            <div class="m-item"><i data-lucide="trash-2"></i> Delete Account</div>
+            <div class="m-header">SETTINGS</div>
+            <div class="m-item"><i data-lucide="palette"></i> Theme & Night Mode</div>
+            <div class="m-header">HELP</div>
+            <div class="m-item"><i data-lucide="info"></i> Feedback & Updates</div>
+        </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="side-item">Home</div>
-    <div class="side-item">Work</div>
-    <div class="side-item">Team</div>
-    <div class="side-item">Friends</div>
-    <div class="side-item">SMS</div>
-    <div class="side-item">Email</div>
-  </div>
+        <div class="viewport">
+            <div id="p-chats" class="page active">
+                <div class="chat-tabs">
+                    <div class="tab t-relay">RELAY</div>
+                    <div class="tab t-sms">SMS</div>
+                    <div class="tab t-email">EMAIL</div>
+                </div>
+                <div id="chat-list-container">
+                    <div class="chat-item" oncontextmenu="pinChat(this); return false;">
+                        <div style="background:var(--orange); width:45px; height:45px; border-radius:50%"></div>
+                        <div style="flex:1">
+                            <strong>Global Relay Chat</strong>
+                            <p style="font-size:12px; color:#888">Tap Relay Icon to open camera</p>
+                        </div>
+                        <i data-lucide="check-check" color="var(--orange)" size="14"></i>
+                    </div>
+                </div>
+            </div>
 
-  <!-- MAIN CONTENT -->
-  <div class="main">
+            <div id="p-status" class="page">
+                <div style="display:flex; gap:15px; overflow-x:auto; padding-bottom:15px;">
+                    <div style="min-width:60px; text-align:center;">
+                        <div style="width:60px; height:60px; border-radius:50%; border:2px dashed #999; display:flex; align-items:center; justify-content:center;"><i data-lucide="plus"></i></div>
+                        <small>Add</small>
+                    </div>
+                </div>
+                <div style="margin-top:20px; background:white; padding:15px; border-radius:15px;">
+                    <strong>Calendar Reminders</strong>
+                </div>
+            </div>
 
-    <!-- CHATS PAGE -->
-    <div id="chats" class="page active">
+            <div id="p-calls" class="page">
+                <div style="background:white; padding:20px; border-radius:15px; text-align:center;">
+                    <i data-lucide="video" size="40" color="var(--orange)"></i>
+                    <h3>Meeting Rooms</h3>
+                    <p>Google Meet & Zoom Integrated</p>
+                </div>
+            </div>
 
-      <input id="search" placeholder="Search chats..." oninput="filterChats()" style="width:100%;padding:8px;border-radius:10px;border:1px solid #ccc;margin-bottom:10px;">
+            <div id="p-ai" class="page">
+                <div style="background:var(--dark-grey); color:white; padding:20px; border-radius:15px;">
+                    <h3>AI Search Engine</h3>
+                    <p>Free searches: 20 / 20</p>
+                    <input type="text" placeholder="Ask anything..." style="width:100%; margin-top:10px; padding:10px; border-radius:10px; border:none;">
+                </div>
+            </div>
+        </div>
 
-      <div id="chatList"></div>
+        <div class="fab"><i data-lucide="plus" size="30"></i></div>
 
+        <nav class="mac-dock">
+            <button class="dock-btn active" id="d-chats" onclick="showPage('p-chats', 'd-chats')"><i data-lucide="message-square"></i><label>Chats</label></button>
+            <button class="dock-btn" id="d-status" onclick="showPage('p-status', 'd-status')"><i data-lucide="circle-dashed"></i><label>Status</label></button>
+            <button class="dock-btn" id="d-calls" onclick="showPage('p-calls', 'd-calls')"><i data-lucide="phone"></i><label>Calls</label></button>
+            <button class="dock-btn" id="d-ai" onclick="showPage('p-ai', 'd-ai')"><i data-lucide="zap"></i><label>AI</label></button>
+        </nav>
     </div>
 
-    <!-- STATUS -->
-    <div id="status" class="page">
-      <h3>Status</h3>
-      <p class="small-note">Add image, text or 10s video status</p>
+    <div id="camera-app">
+        <video id="webcam" autoplay playsinline style="width:100%; height:80%; object-fit:cover;"></video>
+        <div class="shutter" onclick="snap()"></div>
+        <button onclick="closeCam()" style="margin-top:20px; color:white; background:none; border:1px solid white; padding:10px 20px; border-radius:20px;">Exit</button>
     </div>
 
-    <!-- CALLS -->
-    <div id="calls" class="page">
-      <h3>Calls</h3>
-      <p class="small-note">Video / Voice / Meeting rooms (UI mock)</p>
-    </div>
+    <script>
+        lucide.createIcons();
 
-    <!-- AI -->
-    <div id="ai" class="page">
-      <h3>AI Search</h3>
-      <p class="small-note">20 free searches/day (UI mock)</p>
-    </div>
+        // --- Navigation ---
+        window.showPage = (pId, dId) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.dock-btn').forEach(d => d.classList.remove('active'));
+            document.getElementById(pId).classList.add('active');
+            document.getElementById(dId).classList.add('active');
+            document.getElementById('mega-menu').style.display = 'none';
+        };
 
-  </div>
-</div>
+        // --- Camera App ---
+        let stream = null;
+        window.openCam = async () => {
+            document.getElementById('camera-app').style.display = 'flex';
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('webcam').srcObject = stream;
+        };
+        window.closeCam = () => {
+            if(stream) stream.getTracks().forEach(t => t.stop());
+            document.getElementById('camera-app').style.display = 'none';
+        };
+        window.snap = () => alert("Picture Captured!");
 
-<!-- FAB -->
-<div class="fab" onclick="newChat()">+</div>
+        // --- UI Interactions ---
+        window.toggleMenu = () => {
+            const m = document.getElementById('mega-menu');
+            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+        };
 
-<!-- BOTTOM NAV -->
-<div class="bottom">
-  <div class="tab" onclick="switchPage('chats')">Chats</div>
-  <div class="tab" onclick="switchPage('status')">Status</div>
-  <div class="tab" onclick="switchPage('calls')">Calls</div>
-  <div class="tab" onclick="switchPage('ai')">AI</div>
-</div>
+        window.pinChat = (el) => {
+            el.classList.toggle('pinned');
+            alert(el.classList.contains('pinned') ? "Chat Pinned" : "Chat Unpinned");
+        };
 
-<!-- CAMERA -->
-<div class="camera" id="camera">
-  <div class="closeCam" onclick="closeCamera()">✖</div>
-  <video id="video" autoplay></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <div class="snap" onclick="snap()">SNAP</div>
-</div>
-
-<script>
-
-let chats = [
-  {name:"Ali", msg:"Hello", pinned:false},
-  {name:"Sara", msg:"Ok", pinned:false},
-  {name:"Team Dev", msg:"Meeting at 5", pinned:false},
-];
-
-function renderChats(){
-  let list = document.getElementById("chatList");
-  list.innerHTML="";
-
-  chats.forEach((c,i)=>{
-    let div = document.createElement("div");
-    div.className="chat";
-    div.innerHTML=`
-      <div>
-        <b>${c.name}</b><br>
-        <small>${c.msg}</small>
-      </div>
-      <div>✔</div>
-      <div class="chat-actions delete">Delete</div>
-      <div class="chat-actions archive">Archive</div>
-    `;
-
-    // SWIPE
-    let startX=0;
-    div.addEventListener("touchstart",(e)=>{
-      startX=e.touches[0].clientX;
-    });
-
-    div.addEventListener("touchmove",(e)=>{
-      let diff = e.touches[0].clientX - startX;
-      if(diff < -50){
-        div.classList.add("swipe-left");
-      }
-    });
-
-    div.addEventListener("touchend",()=>{
-      if(div.classList.contains("swipe-left")){
-        chats.splice(i,1);
-        renderChats();
-      }
-    });
-
-    // LONG PRESS PIN
-    let pressTimer;
-    div.addEventListener("touchstart",()=>{
-      pressTimer=setTimeout(()=>{
-        chats[i].pinned=!chats[i].pinned;
-        alert("Pinned toggled");
-      },800);
-    });
-    div.addEventListener("touchend",()=>clearTimeout(pressTimer));
-
-    list.appendChild(div);
-  });
-}
-
-renderChats();
-
-function newChat(){
-  let name = prompt("New chat name:");
-  if(name){
-    chats.unshift({name,msg:"New chat",pinned:false});
-    renderChats();
-  }
-}
-
-function filterChats(){
-  let val = document.getElementById("search").value.toLowerCase();
-  let items=document.querySelectorAll(".chat");
-  items.forEach(el=>{
-    el.style.display = el.innerText.toLowerCase().includes(val)?"flex":"none";
-  });
-}
-
-function switchPage(page){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
-}
-
-/* CAMERA */
-let video = document.getElementById("video");
-
-function openCamera(){
-  document.getElementById("camera").style.display="flex";
-
-  navigator.mediaDevices.getUserMedia({video:true})
-  .then(stream=>{
-    video.srcObject=stream;
-  });
-}
-
-function closeCamera(){
-  document.getElementById("camera").style.display="none";
-  let stream = video.srcObject;
-  if(stream){
-    stream.getTracks().forEach(t=>t.stop());
-  }
-}
-
-function snap(){
-  let canvas=document.getElementById("canvas");
-  canvas.width=video.videoWidth;
-  canvas.height=video.videoHeight;
-
-  let ctx=canvas.getContext("2d");
-  ctx.drawImage(video,0,0);
-
-  let img=canvas.toDataURL("image/png");
-  alert("Photo captured!");
-  console.log(img);
-}
-
-</script>
-
+        // --- Swipe Simulation ---
+        document.querySelectorAll('.chat-item').forEach(item => {
+            let startX;
+            item.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+            item.addEventListener('touchend', e => {
+                let diff = startX - e.changedTouches[0].clientX;
+                if(diff > 50) alert("Chat Archived/Deleted");
+            });
+        });
+    </script>
 </body>
 </html>
