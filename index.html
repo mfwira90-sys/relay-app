@@ -3,129 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Relay Super App</title>
+    <title>Relay Super App | Pro</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
     <style>
         :root {
             --soft-orange: #FF9800;
-            --soft-grey: #F5F5F5;
+            --soft-grey: #F8F9FA;
             --sms-green: #4CAF50;
-            --email-yellow: #FFC107;
+            --email-yellow: #FFD54F;
             --white: #ffffff;
-            --text-dark: #333;
+            --sidebar-width: 65px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--soft-grey); margin: 0; height: 100vh; display: flex; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--soft-grey); margin: 0; height: 100vh; display: flex; overflow: hidden; }
 
         /* --- VERTICAL SIDEBAR --- */
-        .sidebar { width: 60px; background: var(--white); border-right: 1px solid #eee; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 25px; z-index: 100; }
-        .side-icon { color: #888; cursor: pointer; transition: 0.3s; }
-        .side-icon:hover { color: var(--soft-orange); }
+        .sidebar { width: var(--sidebar-width); background: var(--white); border-right: 1px solid #eaeaea; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 28px; z-index: 100; }
+        .side-btn { color: #A0A0A0; cursor: pointer; transition: 0.2s; }
+        .side-btn:hover { color: var(--soft-orange); }
 
-        /* --- MAIN CONTENT CONTAINER --- */
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; }
+        /* --- CONTENT AREA --- */
+        .app-container { flex: 1; display: flex; flex-direction: column; position: relative; }
 
-        /* --- UI HEADER --- */
-        header { background: var(--soft-orange); color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 90; }
-        .header-left { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .header-right { display: flex; align-items: center; gap: 15px; }
-
-        /* --- SEARCH BUBBLE --- */
-        .search-bubble { background: rgba(255,255,255,0.2); padding: 6px; border-radius: 50%; cursor: pointer; }
+        /* --- PREMIUM HEADER --- */
+        header { background: var(--soft-orange); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 800; letter-spacing: 0.5px; }
+        .header-actions { display: flex; align-items: center; gap: 18px; }
 
         /* --- COMMUNICATION TABS --- */
-        .comm-tabs { display: flex; background: var(--white); padding: 10px; gap: 10px; border-bottom: 1px solid #eee; }
-        .tab { padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 2px solid transparent; }
-        .tab-relay { background: #fff3e0; color: var(--soft-orange); border-color: var(--soft-orange); }
-        .tab-sms { background: #e8f5e9; color: var(--sms-green); }
-        .tab-email { background: #fffde7; color: var(--email-yellow); }
+        .tabs-bar { display: flex; background: white; padding: 12px 15px; gap: 12px; border-bottom: 1px solid #eee; }
+        .p-tab { padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .relay-tab { background: #FFF3E0; color: var(--soft-orange); border: 1.5px solid var(--soft-orange); }
+        .sms-tab { background: #E8F5E9; color: var(--sms-green); }
+        .email-tab { background: #FFFDE7; color: var(--email-yellow); }
 
-        /* --- CHAT AREA --- */
-        .chat-view { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 140px; }
-        .msg-container { display: flex; flex-direction: column; gap: 4px; max-width: 80%; }
-        .msg-bubble { padding: 12px 16px; border-radius: 18px 18px 18px 4px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
-        .ticks { font-size: 10px; text-align: right; display: block; margin-top: 4px; color: #999; }
-        .tick-sent { color: var(--soft-orange); }
+        /* --- CHAT FLOW --- */
+        #chat-flow { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 160px; }
+        .msg-block { max-width: 85%; align-self: flex-start; }
+        .bubble { background: white; padding: 12px 16px; border-radius: 18px 18px 18px 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); font-size: 15px; line-height: 1.4; color: #333; }
+        .status-ticks { font-size: 10px; margin-top: 4px; display: flex; justify-content: flex-end; }
+        .tick-orange { color: var(--soft-orange); font-weight: bold; }
 
         /* --- FLOATING ACTION BUTTON --- */
-        .fab { position: absolute; bottom: 140px; right: 20px; width: 56px; height: 56px; background: var(--soft-orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(255,152,0,0.4); cursor: pointer; z-index: 80; }
+        .fab { position: absolute; bottom: 145px; right: 20px; width: 56px; height: 56px; background: var(--soft-orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,152,0,0.3); z-index: 90; }
 
-        /* --- INPUT AREA --- */
-        .input-area { position: absolute; bottom: 75px; width: 96%; left: 2%; background: white; border-radius: 30px; padding: 8px 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .input-area input { flex: 1; border: none; outline: none; padding: 10px; font-size: 15px; }
+        /* --- MACOS DOCK STYLE --- */
+        .mac-dock { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0,0,0,0.05); padding: 10px 25px; border-radius: 30px; display: flex; gap: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 100; }
+        .dock-btn { display: flex; flex-direction: column; align-items: center; color: #777; cursor: pointer; border: none; background: none; }
+        .dock-btn.active { color: var(--soft-orange); }
+        .dock-btn label { font-size: 9px; font-weight: 700; margin-top: 4px; }
 
-        /* --- MACOS DOCK NAV --- */
-        .dock-nav { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(15px); padding: 8px 20px; border-radius: 25px; display: flex; gap: 20px; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
-        .dock-item { display: flex; flex-direction: column; align-items: center; color: #666; font-size: 9px; cursor: pointer; }
-        .dock-item.active { color: var(--soft-orange); }
+        /* --- INPUT INTERFACE --- */
+        .input-wrapper { position: absolute; bottom: 85px; width: 94%; left: 3%; background: white; border-radius: 30px; padding: 10px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .input-wrapper input { flex: 1; border: none; outline: none; font-size: 15px; }
 
-        /* --- DROPDOWN MENU --- */
-        #menu-dropdown { display: none; position: absolute; top: 50px; right: 10px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); width: 200px; z-index: 200; overflow: hidden; }
-        .menu-item { padding: 12px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f5f5f5; }
-        .menu-item:hover { background: var(--soft-grey); }
+        /* --- MENU --- */
+        #pro-menu { display: none; position: absolute; top: 60px; right: 15px; background: white; width: 220px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 200; overflow: hidden; border: 1px solid #eee; }
+        .m-item { padding: 12px 18px; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #444; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+        .m-item:hover { background: #fcfcfc; color: var(--soft-orange); }
 
-        #video-full { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 1000; }
+        #video-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <i data-lucide="home" class="side-icon"></i>
-        <i data-lucide="briefcase" class="side-icon"></i>
-        <i data-lucide="users" class="side-icon"></i>
-        <i data-lucide="user-plus" class="side-icon"></i>
-        <i data-lucide="mail" class="side-icon"></i>
+        <i data-lucide="layout-grid" class="side-btn"></i>
+        <i data-lucide="home" class="side-btn"></i>
+        <i data-lucide="briefcase" class="side-btn"></i>
+        <i data-lucide="users" class="side-btn"></i>
+        <i data-lucide="mail" class="side-btn"></i>
     </div>
 
-    <div class="main-wrapper">
+    <div class="app-container">
         <header>
-            <div class="header-left" onclick="startCamera()">
-                <i data-lucide="aperture"></i>
-                <span>Relay</span>
+            <div class="logo-wrap" onclick="launchCam()">
+                <i data-lucide="aperture" size="24"></i>
+                <span>RELAY</span>
             </div>
-            <div class="header-right">
-                <div class="search-bubble"><i data-lucide="search" size="18"></i></div>
-                <i data-lucide="more-vertical" onclick="toggleMenu()" style="cursor:pointer"></i>
+            <div class="header-actions">
+                <i data-lucide="search" size="20" style="cursor:pointer"></i>
+                <i data-lucide="more-vertical" size="22" onclick="toggleProMenu()" style="cursor:pointer"></i>
             </div>
         </header>
 
-        <div id="menu-dropdown">
-            <div class="menu-item"><i data-lucide="user" size="16"></i> Profile</div>
-            <div class="menu-item"><i data-lucide="shield-check" size="16"></i> Account</div>
-            <div class="menu-item"><i data-lucide="settings" size="16"></i> Settings</div>
-            <div class="menu-item"><i data-lucide="help-circle" size="16"></i> Help</div>
+        <div id="pro-menu">
+            <div class="m-item"><i data-lucide="user" size="18"></i> Profile</div>
+            <div class="m-item"><i data-lucide="shield" size="18"></i> Account</div>
+            <div class="m-item"><i data-lucide="settings" size="18"></i> Settings</div>
+            <div class="m-item"><i data-lucide="help-circle" size="18"></i> Help</div>
         </div>
 
-        <div class="comm-tabs">
-            <div class="tab tab-relay">Relay</div>
-            <div class="tab tab-sms">SMS</div>
-            <div class="tab tab-email">Email</div>
+        <div class="tabs-bar">
+            <div class="p-tab relay-tab">Relay</div>
+            <div class="p-tab sms-tab">SMS</div>
+            <div class="p-tab email-tab">Email</div>
         </div>
 
-        <div id="chat-flow" class="chat-view">
+        <div id="chat-flow">
+            <div class="msg-block">
+                <div class="bubble">Production build initialized. Tapping the Relay icon launches Camera. Tapping 3-dots opens Profile.</div>
+                <div class="status-ticks"><span class="tick-orange">✓✓</span></div>
             </div>
-
-        <div class="fab"><i data-lucide="plus"></i></div>
-
-        <div class="input-area">
-            <i data-lucide="paperclip" class="side-icon"></i>
-            <input type="text" id="msg-input" placeholder="Message...">
-            <i data-lucide="mic" class="side-icon"></i>
-            <button id="send-btn" style="background:none; border:none; color:var(--soft-orange);"><i data-lucide="send"></i></button>
         </div>
 
-        <nav class="dock-nav">
-            <div class="dock-item active"><i data-lucide="message-circle"></i><label>Chats</label></div>
-            <div class="dock-item"><i data-lucide="book-user"></i><label>Contacts</label></div>
-            <div class="dock-item"><i data-lucide="radio"></i><label>Status</label></div>
-            <div class="dock-item"><i data-lucide="phone"></i><label>Calls</label></div>
-            <div class="dock-item"><i data-lucide="sparkles"></i><label>AI</label></div>
+        <div class="fab"><i data-lucide="plus" size="28"></i></div>
+
+        <div class="input-wrapper">
+            <i data-lucide="paperclip" color="#888" size="20"></i>
+            <input type="text" id="user-input" placeholder="Message Relay...">
+            <i data-lucide="mic" color="#888" size="20"></i>
+            <button id="send-trigger" style="background:none; border:none; color:var(--soft-orange);"><i data-lucide="send" size="22"></i></button>
+        </div>
+
+        <nav class="mac-dock">
+            <button class="dock-btn active"><i data-lucide="message-square"></i><label>CHATS</label></button>
+            <button class="dock-btn"><i data-lucide="users"></i><label>CONTACTS</label></button>
+            <button class="dock-btn"><i data-lucide="phone"></i><label>CALLS</label></button>
+            <button class="dock-btn"><i data-lucide="sparkles"></i><label>AI</label></button>
         </nav>
     </div>
 
-    <div id="video-full"><button onclick="location.reload()" style="position:absolute; bottom:40px; left:50%; transform:translateX(-50%); background:red; color:white; padding:15px; border-radius:30px; border:none;">End Call</button></div>
+    <div id="video-layer">
+        <button onclick="location.reload()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); background:#FF3B30; color:white; padding:15px 40px; border-radius:35px; border:none; font-weight:bold;">END CALL</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -145,37 +148,37 @@
         const db = getDatabase(app);
         const chatRef = ref(db, "messages");
 
-        // Initialize Icons
+        // Icon Rendering
         lucide.createIcons();
 
-        // Menu Toggle
-        window.toggleMenu = () => {
-            const menu = document.getElementById('menu-dropdown');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        // UI Interactions
+        window.toggleProMenu = () => {
+            const menu = document.getElementById('pro-menu');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         };
 
-        // Camera Logic
-        window.startCamera = async () => {
-            document.getElementById('video-full').style.display = 'block';
+        window.launchCam = async () => {
+            document.getElementById('video-layer').style.display = 'block';
             const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
             await client.join("cf58cde3ad4b45b29b65dc4e01b92ae1", "relay-room", null);
             const track = await AgoraRTC.createCameraVideoTrack();
-            track.play('video-full');
+            track.play('video-layer');
             await client.publish([track]);
         };
 
-        // Chat Logic
-        document.getElementById('send-btn').onclick = () => {
-            const val = document.getElementById('msg-input').value;
-            if(val) { push(chatRef, { text: val }); document.getElementById('msg-input').value = ""; }
+        // Messaging Logic
+        document.getElementById('send-trigger').onclick = () => {
+            const val = document.getElementById('user-input').value;
+            if(val) { push(chatRef, { text: val }); document.getElementById('user-input').value = ""; }
         };
 
-        onChildAdded(chatRef, (s) => {
+        onChildAdded(chatRef, (snap) => {
+            const flow = document.getElementById('chat-flow');
             const div = document.createElement('div');
-            div.className = 'msg-container';
-            div.innerHTML = `<div class="msg-bubble">${s.val().text}</div><span class="ticks tick-sent">✓✓</span>`;
-            document.getElementById('chat-flow').appendChild(div);
-            document.getElementById('chat-flow').scrollTop = document.getElementById('chat-flow').scrollHeight;
+            div.className = 'msg-block';
+            div.innerHTML = `<div class="bubble">${snap.val().text}</div><div class="status-ticks"><span class="tick-orange">✓✓</span></div>`;
+            flow.appendChild(div);
+            flow.scrollTop = flow.scrollHeight;
         });
     </script>
 </body>
