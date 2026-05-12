@@ -1,432 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relay Messaging</title>
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+body{background:#ececec;overflow:hidden;}
 
-/* =========================
-   RESET
-========================= */
+.app{display:flex;height:100vh;width:100%;}
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Segoe UI, sans-serif;
-}
-
-body{
-    background:#ebebeb;
-    overflow:hidden;
-}
-
-/* =========================
-   MAIN APP
-========================= */
-
-.app{
-    display:flex;
-    height:100vh;
-    width:100%;
-}
-
-/* =========================
-   SIDEBAR
-========================= */
-
+/* SIDEBAR */
 .sidebar{
-    width:80px;
-    background:#f7f7f7;
-    border-right:1px solid #ddd;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding-top:16px;
-    gap:18px;
+width:80px;background:#f6f6f6;border-right:1px solid #ddd;
+display:flex;flex-direction:column;align-items:center;padding-top:15px;gap:15px;
 }
 
 .side-btn{
-    width:56px;
-    height:56px;
-    border-radius:18px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    color:#666;
-    transition:0.2s;
+width:55px;height:55px;border-radius:18px;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;color:#666;transition:.2s;
 }
 
-.side-btn:hover{
-    background:#ffab61;
-    color:white;
-}
+.side-btn:hover{background:#ffb36b;color:#fff;}
+.side-btn.active{background:#ff8c2f;color:#fff;}
 
-.side-btn.active{
-    background:#ff9640;
-    color:white;
-    box-shadow:0 8px 20px rgba(255,150,64,0.3);
-}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;position:relative;}
 
-/* =========================
-   MAIN CONTENT
-========================= */
-
-.main{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-}
-
-/* =========================
-   HEADER
-========================= */
-
+/* HEADER */
 .header{
-    height:78px;
-    background:#f8f8f8;
-    border-bottom:1px solid #ddd;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 20px;
-}
-
-.header-left{
-    display:flex;
-    align-items:center;
-    gap:14px;
+height:75px;background:#f8f8f8;border-bottom:1px solid #ddd;
+display:flex;align-items:center;justify-content:space-between;padding:0 15px;
 }
 
 .logo{
-    width:52px;
-    height:52px;
-    border-radius:18px;
-    background:#ff9640;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    box-shadow:0 10px 20px rgba(255,150,64,0.4);
+width:50px;height:50px;border-radius:18px;background:#ff8c2f;
+display:flex;align-items:center;justify-content:center;
+color:#fff;cursor:pointer;
 }
 
-.brand{
-    font-size:22px;
-    font-weight:700;
-    color:#444;
+.search{
+display:flex;align-items:center;background:#eee;
+padding:8px 12px;border-radius:18px;width:200px;
 }
 
-.header-right{
-    display:flex;
-    align-items:center;
-    gap:12px;
+.search input{
+border:none;background:transparent;outline:none;width:100%;
 }
 
-.search-box{
-    width:240px;
-    background:#ececec;
-    border-radius:20px;
-    display:flex;
-    align-items:center;
-    padding:10px 14px;
-    gap:10px;
+.icon-btn{
+width:42px;height:42px;border-radius:14px;
+display:flex;align-items:center;justify-content:center;
+background:#eee;cursor:pointer;
 }
 
-.search-box input{
-    border:none;
-    background:transparent;
-    outline:none;
-    width:100%;
-}
+/* CHAT */
+.chat-area{flex:1;overflow:auto;padding:10px;}
 
-.header-btn{
-    width:44px;
-    height:44px;
-    border-radius:14px;
-    background:#ececec;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    transition:0.2s;
-}
-
-.header-btn:hover{
-    background:#ffab61;
-    color:white;
-}
-
-/* =========================
-   TOP TABS
-========================= */
-
-.tabs{
-    display:flex;
-    gap:10px;
-    padding:18px 20px;
-}
-
-.tab{
-    padding:10px 18px;
-    border-radius:20px;
-    color:white;
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-}
-
-.relay{
-    background:#ff9640;
-}
-
-.sms{
-    background:#67c26f;
-}
-
-.email{
-    background:#f1ca56;
-    color:#444;
-}
-
-/* =========================
-   CHAT AREA
-========================= */
-
-.chat-area{
-    flex:1;
-    overflow-y:auto;
-    padding:0 20px 100px 20px;
-}
-
-/* =========================
-   CHAT CARD
-========================= */
-
-.chat-card{
-    background:white;
-    border-radius:24px;
-    padding:16px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:16px;
-    cursor:pointer;
-    transition:0.2s;
-    box-shadow:0 5px 18px rgba(0,0,0,0.05);
-}
-
-.chat-card:hover{
-    transform:translateY(-2px);
-}
-
-.chat-left{
-    display:flex;
-    align-items:center;
-    gap:14px;
+.chat{
+background:#fff;padding:14px;border-radius:18px;
+display:flex;justify-content:space-between;margin-bottom:10px;
 }
 
 .avatar{
-    width:56px;
-    height:56px;
-    border-radius:18px;
-    background:#ffab61;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;
-    font-weight:bold;
-    font-size:22px;
+width:45px;height:45px;border-radius:15px;
+background:#ffb36b;display:flex;align-items:center;justify-content:center;
+color:#fff;font-weight:bold;
 }
 
-.chat-info h3{
-    color:#444;
-    margin-bottom:4px;
-}
-
-.chat-info p{
-    color:#777;
-    font-size:14px;
-}
-
-.chat-right{
-    text-align:right;
-}
-
-.time{
-    color:#999;
-    font-size:12px;
-    margin-bottom:8px;
-}
-
-.tick{
-    display:flex;
-    justify-content:flex-end;
-}
-
-.tick .material-icons-round{
-    font-size:20px;
-}
-
-.sent{
-    color:#ff9640;
-}
-
-.received{
-    color:#888;
-}
-
-.read{
-    color:#666;
-}
-
-/* =========================
-   FAB
-========================= */
-
-.fab-container{
-    position:absolute;
-    right:22px;
-    bottom:100px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-}
-
+/* FAB */
 .fab{
-    width:60px;
-    height:60px;
-    border-radius:20px;
-    background:#ff9640;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    box-shadow:0 10px 24px rgba(255,150,64,0.4);
-    transition:0.2s;
+position:absolute;right:20px;bottom:90px;
+width:60px;height:60px;border-radius:20px;
+background:#ff8c2f;color:#fff;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;
 }
 
-.fab:hover{
-    transform:scale(1.05);
-}
-
-/* =========================
-   BOTTOM NAV
-========================= */
-
-.bottom-nav{
-    position:absolute;
-    bottom:0;
-    left:0;
-    width:100%;
-    height:78px;
-    background:#f8f8f8;
-    border-top:1px solid #ddd;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+/* BOTTOM */
+.bottom{
+position:absolute;bottom:0;width:100%;height:70px;
+background:#f8f8f8;border-top:1px solid #ddd;
+display:flex;align-items:center;justify-content:center;
 }
 
 .dock{
-    background:white;
-    padding:10px 24px;
-    border-radius:26px;
-    display:flex;
-    gap:30px;
-    box-shadow:0 10px 20px rgba(0,0,0,0.08);
+display:flex;gap:25px;background:#fff;
+padding:10px 20px;border-radius:25px;
 }
 
-.dock-item{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    cursor:pointer;
-    color:#666;
-    transition:0.2s;
-}
+.dock div{cursor:pointer;text-align:center;font-size:12px;}
 
-.dock-item:hover{
-    color:#ff9640;
-    transform:translateY(-2px);
-}
-
-.dock-item span:last-child{
-    font-size:12px;
-    margin-top:4px;
-}
-
-/* =========================
-   DROPDOWN
-========================= */
-
+/* MENU */
 .menu{
-    position:absolute;
-    top:80px;
-    right:20px;
-    width:320px;
-    max-height:75vh;
-    overflow-y:auto;
-    background:white;
-    border-radius:24px;
-    padding:20px;
-    box-shadow:0 20px 40px rgba(0,0,0,0.15);
-    display:none;
-    z-index:999;
+position:absolute;right:10px;top:75px;
+width:260px;background:#fff;border-radius:18px;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+display:none;padding:10px;
 }
 
-.menu.active{
-    display:block;
+.menu.active{display:block;}
+
+.menu div{
+padding:10px;border-bottom:1px solid #eee;
+cursor:pointer;font-size:14px;
 }
 
-.menu h4{
-    color:#ff9640;
-    margin-bottom:10px;
+/* CAMERA */
+#cameraBox{
+position:fixed;top:50%;left:50%;
+transform:translate(-50%,-50%);
+width:300px;border-radius:15px;
+display:none;z-index:999;
 }
 
-.menu ul{
-    list-style:none;
-    margin-bottom:18px;
-}
-
-.menu li{
-    padding:10px 0;
-    border-bottom:1px solid #eee;
-    color:#555;
-    cursor:pointer;
-}
-
-.menu li:hover{
-    color:#ff9640;
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media(max-width:900px){
-
-    .sidebar{
-        display:none;
-    }
-
-    .search-box{
-        width:140px;
-    }
-
-    .dock{
-        gap:16px;
-    }
-
-}
-
+video{width:100%;border-radius:15px;}
 </style>
 </head>
 
@@ -434,508 +126,131 @@ body{
 
 <div class="app">
 
-    <!-- =========================
-         SIDEBAR
-    ========================== -->
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-    <div class="sidebar">
+<div class="side-btn active" onclick="go('Home')"><span class="material-icons-round">home</span></div>
+<div class="side-btn" onclick="go('Work')"><span class="material-icons-round">work</span></div>
+<div class="side-btn" onclick="go('Team')"><span class="material-icons-round">groups</span></div>
+<div class="side-btn" onclick="go('SMS')"><span class="material-icons-round">sms</span></div>
 
-        <div class="side-btn active" onclick="showAlert('Home')">
-            <span class="material-icons-round">home</span>
-        </div>
+</div>
 
-        <div class="side-btn" onclick="showAlert('Work')">
-            <span class="material-icons-round">work</span>
-        </div>
+<!-- MAIN -->
+<div class="main">
 
-        <div class="side-btn" onclick="showAlert('Team')">
-            <span class="material-icons-round">groups</span>
-        </div>
+<!-- HEADER -->
+<div class="header">
 
-        <div class="side-btn" onclick="showAlert('Friends')">
-            <span class="material-icons-round">favorite</span>
-        </div>
+<div class="logo" onclick="openCamera()">
+<span class="material-icons-round">camera_alt</span>
+</div>
 
-        <div class="side-btn" onclick="showAlert('SMS')">
-            <span class="material-icons-round">sms</span>
-        </div>
+<div class="search">
+<span class="material-icons-round">search</span>
+<input id="search" onkeyup="searchChat()" placeholder="Search...">
+</div>
 
-        <div class="side-btn" onclick="showAlert('Email')">
-            <span class="material-icons-round">email</span>
-        </div>
+<div class="icon-btn" onclick="toggleMenu()">
+<span class="material-icons-round">more_vert</span>
+</div>
 
-    </div>
+</div>
 
-    <!-- =========================
-         MAIN
-    ========================== -->
+<!-- MENU -->
+<div class="menu" id="menu">
+<div onclick="go('Profile')">Profile</div>
+<div onclick="go('Settings')">Settings</div>
+<div onclick="go('Security')">Security</div>
+<div onclick="go('Help')">Help</div>
+</div>
 
-    <div class="main">
+<!-- CHAT -->
+<div class="chat-area" id="chatArea">
 
-        <!-- HEADER -->
+<div class="chat"><div class="avatar">A</div><div>Alex</div></div>
+<div class="chat"><div class="avatar">J</div><div>Jessica</div></div>
+<div class="chat"><div class="avatar">R</div><div>Ryan</div></div>
 
-        <div class="header">
+</div>
 
-            <div class="header-left">
+<!-- FAB -->
+<div class="fab" onclick="newChat()">
+<span class="material-icons-round">add</span>
+</div>
 
-                <div class="logo" onclick="openCamera()">
-                    <span class="material-icons-round">bolt</span>
-                </div>
+<!-- BOTTOM -->
+<div class="bottom">
 
-                <div class="brand">Relay Messaging</div>
+<div class="dock">
+<div onclick="go('Chats')">Chats</div>
+<div onclick="go('Contacts')">Contacts</div>
+<div onclick="go('Calls')">Calls</div>
+<div onclick="go('AI')">AI</div>
+</div>
 
-            </div>
+</div>
 
-            <div class="header-right">
+</div>
+</div>
 
-                <div class="search-box">
-
-                    <span class="material-icons-round">search</span>
-
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Search chats..."
-                        onkeyup="searchChats()"
-                    />
-
-                </div>
-
-                <div class="header-btn" onclick="aiSearch()">
-                    <span class="material-icons-round">smart_toy</span>
-                </div>
-
-                <div class="header-btn" onclick="toggleMenu()">
-                    <span class="material-icons-round">more_vert</span>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- MENU -->
-
-        <div class="menu" id="menu">
-
-            <h4>Profile</h4>
-
-            <ul>
-                <li onclick="showAlert('Change display image')">Change display image</li>
-                <li onclick="showAlert('Change background image')">Change background image</li>
-                <li onclick="showAlert('Change chat name')">Change chat name</li>
-                <li onclick="showAlert('Add bio')">Add bio</li>
-                <li onclick="showAlert('Greeting/status message')">Greeting/status message</li>
-            </ul>
-
-            <h4>Account</h4>
-
-            <ul>
-                <li onclick="showAlert('Phone number')">Phone number</li>
-                <li onclick="showAlert('Email')">Email</li>
-                <li onclick="showAlert('Security')">Security</li>
-                <li onclick="showAlert('P2P connection')">P2P connection</li>
-                <li onclick="showAlert('End-to-end encryption')">End-to-end encryption</li>
-                <li onclick="showAlert('Logged-in devices')">Logged-in devices</li>
-                <li onclick="showAlert('Delete account')">Delete account</li>
-                <li onclick="showAlert('Blocked accounts')">Blocked accounts</li>
-                <li onclick="showAlert('Data & storage management')">Data & storage management</li>
-            </ul>
-
-            <h4>Settings</h4>
-
-            <ul>
-                <li onclick="toggleDarkMode()">Night mode</li>
-                <li onclick="showAlert('Change theme')">Change theme</li>
-                <li onclick="showAlert('Change font')">Change font</li>
-                <li onclick="showAlert('Notification settings')">Notification settings</li>
-                <li onclick="showAlert('Wallpaper customization')">Wallpaper customization</li>
-            </ul>
-
-            <h4>Help</h4>
-
-            <ul>
-                <li onclick="showAlert('Feedback')">Feedback</li>
-                <li onclick="showAlert('Privacy Policy')">Privacy Policy</li>
-                <li onclick="showAlert('Updates')">Updates</li>
-            </ul>
-
-        </div>
-
-        <!-- TABS -->
-
-        <div class="tabs">
-
-            <div class="tab relay" onclick="showAlert('Relay Tab')">
-                Relay
-            </div>
-
-            <div class="tab sms" onclick="showAlert('SMS Tab')">
-                SMS
-            </div>
-
-            <div class="tab email" onclick="showAlert('Email Tab')">
-                Email
-            </div>
-
-        </div>
-
-        <!-- CHAT AREA -->
-
-        <div class="chat-area" id="chatArea">
-
-            <!-- CHAT 1 -->
-
-            <div class="chat-card">
-
-                <div class="chat-left">
-
-                    <div class="avatar">A</div>
-
-                    <div class="chat-info">
-                        <h3>Alex Morgan</h3>
-                        <p>See you tomorrow 🔥</p>
-                    </div>
-
-                </div>
-
-                <div class="chat-right">
-
-                    <div class="time">10:42 AM</div>
-
-                    <div class="tick">
-                        <span class="material-icons-round sent">done</span>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- CHAT 2 -->
-
-            <div class="chat-card">
-
-                <div class="chat-left">
-
-                    <div class="avatar">J</div>
-
-                    <div class="chat-info">
-                        <h3>Jessica Lee</h3>
-                        <p>Project files uploaded.</p>
-                    </div>
-
-                </div>
-
-                <div class="chat-right">
-
-                    <div class="time">Yesterday</div>
-
-                    <div class="tick">
-                        <span class="material-icons-round received">done</span>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- CHAT 3 -->
-
-            <div class="chat-card">
-
-                <div class="chat-left">
-
-                    <div class="avatar">R</div>
-
-                    <div class="chat-info">
-                        <h3>Ryan Cooper</h3>
-                        <p>Voice call later?</p>
-                    </div>
-
-                </div>
-
-                <div class="chat-right">
-
-                    <div class="time">Monday</div>
-
-                    <div class="tick">
-                        <span class="material-icons-round read">done_all</span>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- FAB -->
-
-        <div class="fab-container">
-
-            <div class="fab" onclick="findContacts()">
-                <span class="material-icons-round">person_search</span>
-            </div>
-
-            <div class="fab" onclick="newChat()">
-                <span class="material-icons-round">add</span>
-            </div>
-
-        </div>
-
-        <!-- BOTTOM NAV -->
-
-        <div class="bottom-nav">
-
-            <div class="dock">
-
-                <div class="dock-item" onclick="showAlert('Chats')">
-                    <span class="material-icons-round">chat</span>
-                    <span>Chats</span>
-                </div>
-
-                <div class="dock-item" onclick="showAlert('Contacts')">
-                    <span class="material-icons-round">contacts</span>
-                    <span>Contacts</span>
-                </div>
-
-                <div class="dock-item" onclick="showAlert('Status')">
-                    <span class="material-icons-round">radio_button_checked</span>
-                    <span>Status</span>
-                </div>
-
-                <div class="dock-item" onclick="showAlert('Calls & Video Calls')">
-                    <span class="material-icons-round">videocam</span>
-                    <span>Calls</span>
-                </div>
-
-                <div class="dock-item" onclick="aiSearch()">
-                    <span class="material-icons-round">smart_toy</span>
-                    <span>AI</span>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
+<!-- CAMERA -->
+<div id="cameraBox">
+<video id="video" autoplay></video>
 </div>
 
 <script>
 
-/* =========================
-   MENU
-========================= */
+function go(x){
+alert(x + " clicked");
+}
 
+/* MENU */
 function toggleMenu(){
-
-    document
-        .getElementById("menu")
-        .classList
-        .toggle("active");
-
+document.getElementById("menu").classList.toggle("active");
 }
 
-/* =========================
-   SIMPLE ALERT
-========================= */
+/* SEARCH */
+function searchChat(){
+let val=document.getElementById("search").value.toLowerCase();
+let chats=document.querySelectorAll(".chat");
 
-function showAlert(name){
-
-    alert(name + " clicked");
-
+chats.forEach(c=>{
+c.style.display=c.innerText.toLowerCase().includes(val)?"flex":"none";
+});
 }
 
-/* =========================
-   NEW CHAT
-========================= */
-
+/* NEW CHAT */
 function newChat(){
+let name=prompt("New chat name:");
+if(!name) return;
 
-    const name = prompt("Enter new chat name:");
-
-    if(name){
-
-        const chatArea = document.getElementById("chatArea");
-
-        const div = document.createElement("div");
-
-        div.className = "chat-card";
-
-        div.innerHTML = `
-
-            <div class="chat-left">
-
-                <div class="avatar">
-                    ${name.charAt(0).toUpperCase()}
-                </div>
-
-                <div class="chat-info">
-                    <h3>${name}</h3>
-                    <p>New conversation started</p>
-                </div>
-
-            </div>
-
-            <div class="chat-right">
-
-                <div class="time">Now</div>
-
-                <div class="tick">
-                    <span class="material-icons-round sent">
-                        done
-                    </span>
-                </div>
-
-            </div>
-
-        `;
-
-        chatArea.prepend(div);
-
-    }
-
+let div=document.createElement("div");
+div.className="chat";
+div.innerHTML=`<div class="avatar">${name[0]}</div><div>${name}</div>`;
+document.getElementById("chatArea").prepend(div);
 }
 
-/* =========================
-   SEARCH CHAT
-========================= */
+/* CAMERA FIXED */
+async function openCamera(){
+try{
 
-function searchChats(){
+let stream=await navigator.mediaDevices.getUserMedia({video:true});
 
-    const input =
-        document
-        .getElementById("searchInput")
-        .value
-        .toLowerCase();
+let video=document.getElementById("video");
+let box=document.getElementById("cameraBox");
 
-    const chats =
-        document.querySelectorAll(".chat-card");
+video.srcObject=stream;
+box.style.display="block";
 
-    chats.forEach(chat => {
-
-        const text =
-            chat.innerText.toLowerCase();
-
-        if(text.includes(input)){
-
-            chat.style.display = "flex";
-
-        } else {
-
-            chat.style.display = "none";
-
-        }
-
-    });
-
+}catch(e){
+alert("Camera blocked or not supported");
+}
 }
 
-/* =========================
-   AI SEARCH
-========================= */
-
-function aiSearch(){
-
-    const query =
-        prompt("AI Search:");
-
-    if(query){
-
-        alert("Searching AI for: " + query);
-
-    }
-
-}
-
-/* =========================
-   FIND CONTACTS
-========================= */
-
-function findContacts(){
-
-    alert("Opening contact finder");
-
-}
-
-/* =========================
-   CAMERA
-========================= */
-
-function openCamera(){
-
-    if(
-        navigator.mediaDevices &&
-        navigator.mediaDevices.getUserMedia
-    ){
-
-        navigator.mediaDevices
-            .getUserMedia({
-                video:true
-            })
-
-            .then(function(){
-
-                alert("Camera launched successfully");
-
-            })
-
-            .catch(function(){
-
-                alert("Camera permission denied");
-
-            });
-
-    } else {
-
-        alert("Camera not supported");
-
-    }
-
-}
-
-/* =========================
-   DARK MODE
-========================= */
-
-let darkMode = false;
-
-function toggleDarkMode(){
-
-    darkMode = !darkMode;
-
-    if(darkMode){
-
-        document.body.style.background = "#1f1f1f";
-
-        document.querySelector(".main").style.background = "#2a2a2a";
-
-    } else {
-
-        document.body.style.background = "#ebebeb";
-
-        document.querySelector(".main").style.background = "#ffffff";
-
-    }
-
-}
-
-/* =========================
-   CLOSE MENU OUTSIDE
-========================= */
-
-window.onclick = function(event){
-
-    const menu =
-        document.getElementById("menu");
-
-    if(
-        !event.target.closest(".menu") &&
-        !event.target.closest(".header-btn")
-    ){
-
-        menu.classList.remove("active");
-
-    }
-
+/* CLOSE CAMERA ON CLICK */
+document.getElementById("cameraBox").onclick=function(){
+this.style.display="none";
 }
 
 </script>
