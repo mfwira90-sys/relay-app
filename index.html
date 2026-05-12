@@ -3,357 +3,389 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Relay Messaging UI</title>
+<title>Relay Messaging</title>
 
-<!-- Material Icons -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 <style>
 :root{
   --orange:#FF8C42;
   --orange2:#FFAB76;
-  --grey:#B0A8B9;
-  --bg:#1f1f23;
-  --glass:rgba(255,255,255,0.08);
-  --blur:14px;
-  --green:#7ECB9A;
-  --yellow:#F4D35E;
+  --grey:#EAE4E6;
+  --dark:#2b2b2b;
 }
 
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
-
 body{
-  background:linear-gradient(145deg,#1c1c20,#2a2a30);
-  color:white;
-  height:100vh;
+  margin:0;
+  font-family:Arial;
+  background:var(--grey);
   overflow:hidden;
 }
 
 /* HEADER */
-header{
-  position:sticky;
-  top:0;
+.header{
+  height:55px;
+  background:linear-gradient(90deg,var(--orange2),var(--orange));
   display:flex;
+  align-items:center;
   justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  background:var(--glass);
-  backdrop-filter:blur(var(--blur));
-  border-bottom:1px solid rgba(255,255,255,0.05);
+  padding:0 10px;
+  color:#fff;
 }
 
-.logo{
-  display:flex;
-  align-items:center;
-  gap:8px;
+.icon-btn{
   cursor:pointer;
+  user-select:none;
 }
 
-.logo .material-icons{
-  color:var(--orange);
-}
-
-.search-pill{
+/* LAYOUT */
+.container{
   display:flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 12px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(10px);
-  cursor:pointer;
+  height:calc(100vh - 110px);
 }
 
 /* SIDEBAR */
 .sidebar{
-  position:absolute;
-  top:60px;
-  left:0;
-  width:70px;
-  height:calc(100% - 120px);
-  background:var(--glass);
-  backdrop-filter:blur(var(--blur));
+  width:80px;
+  background:#fff;
   display:flex;
   flex-direction:column;
   align-items:center;
   padding-top:10px;
+  gap:15px;
+  border-right:1px solid #ddd;
 }
 
 .side-item{
-  margin:12px 0;
+  font-size:11px;
   text-align:center;
-  font-size:10px;
-  color:#ddd;
   cursor:pointer;
-}
-
-.side-item .material-icons{
-  display:block;
-  color:#ccc;
-}
-
-.side-item.active .material-icons{
-  color:var(--orange);
-  filter:drop-shadow(0 0 6px var(--orange));
 }
 
 /* MAIN */
 .main{
-  margin-left:70px;
-  padding:12px;
-}
-
-/* AI SEARCH */
-.ai-search{
-  margin:10px 0;
-  padding:12px;
-  border-radius:18px;
-  background:linear-gradient(135deg,rgba(255,140,66,0.2),rgba(255,255,255,0.05));
-  border:1px solid rgba(255,140,66,0.3);
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-/* TABS */
-.tabs{
-  display:flex;
-  gap:10px;
-  margin:10px 0;
-}
-
-.tab{
-  padding:6px 12px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.08);
-  font-size:12px;
-}
-
-.tab.relay{border:1px solid var(--orange);}
-.tab.sms{border:1px solid var(--green);}
-.tab.email{border:1px solid var(--yellow);}
-
-/* CHAT LIST */
-.chat-list{
-  margin-top:10px;
-  height:60vh;
+  flex:1;
   overflow:auto;
+  padding:10px;
 }
 
+/* CHAT ITEM */
 .chat{
+  background:#fff;
+  padding:10px;
+  margin-bottom:8px;
+  border-radius:12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:12px;
-  background:rgba(255,255,255,0.05);
   transition:0.2s;
+  touch-action: pan-y;
+  position:relative;
 }
 
-.chat:hover{
-  background:rgba(255,255,255,0.08);
+.chat.swipe-left{
+  transform:translateX(-80px);
+  background:#ffe5e5;
 }
 
-.avatar{
-  width:40px;height:40px;
-  border-radius:50%;
-  background:linear-gradient(135deg,var(--orange2),var(--grey));
-}
-
-.chat-info{
-  flex:1;
-  margin-left:10px;
-}
-
-.chat-name{
-  font-weight:600;
-}
-
-.chat-msg{
+.chat-actions{
+  position:absolute;
+  right:-80px;
+  top:0;
+  height:100%;
+  width:80px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
   font-size:12px;
-  color:#bbb;
 }
 
-/* STATUS TICKS */
-.tick.sent{color:var(--orange2);}
-.tick.received{color:var(--grey);}
-.tick.read{color:#aaa;}
+.delete{
+  background:red;
+}
+
+.archive{
+  background:orange;
+}
+
+/* BOTTOM NAV */
+.bottom{
+  height:55px;
+  background:#fff;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  border-top:1px solid #ddd;
+}
+
+.tab{
+  text-align:center;
+  font-size:11px;
+  cursor:pointer;
+}
 
 /* FAB */
 .fab{
   position:fixed;
-  bottom:80px;
-  right:20px;
-  background:linear-gradient(135deg,var(--orange),var(--orange2));
-  width:56px;
-  height:56px;
-  border-radius:18px;
+  right:15px;
+  bottom:70px;
+  background:var(--orange);
+  width:55px;
+  height:55px;
+  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
+  color:#fff;
+  font-size:30px;
   cursor:pointer;
-  box-shadow:0 10px 20px rgba(0,0,0,0.4);
 }
 
-.fab-menu{
-  position:absolute;
-  bottom:70px;
-  right:0;
+/* CAMERA */
+.camera{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
   display:none;
   flex-direction:column;
-  gap:8px;
+  align-items:center;
+  justify-content:center;
 }
 
-.fab:hover .fab-menu{
-  display:flex;
+video{
+  width:100%;
+  max-height:70%;
 }
 
-.fab-item{
-  background:rgba(255,255,255,0.1);
-  padding:8px 10px;
-  border-radius:10px;
-  font-size:12px;
-}
-
-/* BOTTOM DOCK */
-.dock{
-  position:fixed;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,0.08);
-  backdrop-filter:blur(20px);
-  border-radius:20px;
-  display:flex;
-  gap:20px;
+.snap{
+  margin-top:10px;
+  background:var(--orange);
   padding:10px 20px;
+  color:#fff;
+  border-radius:20px;
+  cursor:pointer;
 }
 
-.dock-item{
-  text-align:center;
-  font-size:10px;
-  color:#ccc;
+.closeCam{
+  position:absolute;
+  top:10px;
+  right:10px;
+  color:#fff;
+  cursor:pointer;
 }
 
-.dock-item .material-icons{
+/* STATUS / CALLS / AI */
+.page{
+  display:none;
+}
+.page.active{
   display:block;
 }
 
-.active-dot{
-  width:6px;height:6px;
-  background:var(--orange);
-  border-radius:50%;
-  margin:2px auto 0;
+.small-note{
+  font-size:12px;
+  color:#666;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <div class="logo" onclick="alert('Camera Open')">
-    <span class="material-icons">camera_alt</span>
-    <b>Relay</b>
+<!-- HEADER -->
+<div class="header">
+  <div onclick="openCamera()">📷 Relay</div>
+
+  <div style="display:flex;gap:10px;align-items:center;">
+    🔍
+    ☰
   </div>
-
-  <div class="search-pill">
-    <span class="material-icons">search</span>
-    Search
-  </div>
-
-  <span class="material-icons">more_vert</span>
-</header>
-
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="side-item active"><span class="material-icons">home</span>Home</div>
-  <div class="side-item"><span class="material-icons">work</span>Work</div>
-  <div class="side-item"><span class="material-icons">groups</span>Team</div>
-  <div class="side-item"><span class="material-icons">people</span>Friends</div>
-  <div class="side-item"><span class="material-icons">sms</span>SMS</div>
-  <div class="side-item"><span class="material-icons">email</span>Email</div>
 </div>
 
 <!-- MAIN -->
-<div class="main">
+<div class="container">
 
-  <div class="ai-search">
-    <span class="material-icons">auto_awesome</span>
-    Ask anything...
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="side-item">Home</div>
+    <div class="side-item">Work</div>
+    <div class="side-item">Team</div>
+    <div class="side-item">Friends</div>
+    <div class="side-item">SMS</div>
+    <div class="side-item">Email</div>
   </div>
 
-  <div class="tabs">
-    <div class="tab relay">Relay</div>
-    <div class="tab sms">SMS</div>
-    <div class="tab email">Email</div>
-  </div>
+  <!-- MAIN CONTENT -->
+  <div class="main">
 
-  <div class="chat-list">
+    <!-- CHATS PAGE -->
+    <div id="chats" class="page active">
 
-    <div class="chat">
-      <div class="avatar"></div>
-      <div class="chat-info">
-        <div class="chat-name">Alex</div>
-        <div class="chat-msg">Hey, are you coming?</div>
-      </div>
-      <div class="tick read">✔✔</div>
+      <input id="search" placeholder="Search chats..." oninput="filterChats()" style="width:100%;padding:8px;border-radius:10px;border:1px solid #ccc;margin-bottom:10px;">
+
+      <div id="chatList"></div>
+
     </div>
 
-    <div class="chat">
-      <div class="avatar"></div>
-      <div class="chat-info">
-        <div class="chat-name">Team Alpha</div>
-        <div class="chat-msg">Project updated</div>
-      </div>
-      <div class="tick received">✔</div>
+    <!-- STATUS -->
+    <div id="status" class="page">
+      <h3>Status</h3>
+      <p class="small-note">Add image, text or 10s video status</p>
     </div>
 
-    <div class="chat">
-      <div class="avatar"></div>
-      <div class="chat-info">
-        <div class="chat-name">Sara</div>
-        <div class="chat-msg">Call me later</div>
-      </div>
-      <div class="tick sent">✔</div>
+    <!-- CALLS -->
+    <div id="calls" class="page">
+      <h3>Calls</h3>
+      <p class="small-note">Video / Voice / Meeting rooms (UI mock)</p>
+    </div>
+
+    <!-- AI -->
+    <div id="ai" class="page">
+      <h3>AI Search</h3>
+      <p class="small-note">20 free searches/day (UI mock)</p>
     </div>
 
   </div>
 </div>
 
 <!-- FAB -->
-<div class="fab">
-  <span class="material-icons">add</span>
+<div class="fab" onclick="newChat()">+</div>
 
-  <div class="fab-menu">
-    <div class="fab-item">+ New Chat</div>
-    <div class="fab-item">People</div>
-  </div>
+<!-- BOTTOM NAV -->
+<div class="bottom">
+  <div class="tab" onclick="switchPage('chats')">Chats</div>
+  <div class="tab" onclick="switchPage('status')">Status</div>
+  <div class="tab" onclick="switchPage('calls')">Calls</div>
+  <div class="tab" onclick="switchPage('ai')">AI</div>
 </div>
 
-<!-- BOTTOM DOCK -->
-<div class="dock">
-  <div class="dock-item">
-    <span class="material-icons">chat</span>
-    Chats
-    <div class="active-dot"></div>
-  </div>
-
-  <div class="dock-item">
-    <span class="material-icons">contacts</span>
-    Contacts
-  </div>
-
-  <div class="dock-item">
-    <span class="material-icons">auto_awesome_motion</span>
-    Status
-  </div>
-
-  <div class="dock-item">
-    <span class="material-icons">video_call</span>
-    Calls
-  </div>
+<!-- CAMERA -->
+<div class="camera" id="camera">
+  <div class="closeCam" onclick="closeCamera()">✖</div>
+  <video id="video" autoplay></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <div class="snap" onclick="snap()">SNAP</div>
 </div>
+
+<script>
+
+let chats = [
+  {name:"Ali", msg:"Hello", pinned:false},
+  {name:"Sara", msg:"Ok", pinned:false},
+  {name:"Team Dev", msg:"Meeting at 5", pinned:false},
+];
+
+function renderChats(){
+  let list = document.getElementById("chatList");
+  list.innerHTML="";
+
+  chats.forEach((c,i)=>{
+    let div = document.createElement("div");
+    div.className="chat";
+    div.innerHTML=`
+      <div>
+        <b>${c.name}</b><br>
+        <small>${c.msg}</small>
+      </div>
+      <div>✔</div>
+      <div class="chat-actions delete">Delete</div>
+      <div class="chat-actions archive">Archive</div>
+    `;
+
+    // SWIPE
+    let startX=0;
+    div.addEventListener("touchstart",(e)=>{
+      startX=e.touches[0].clientX;
+    });
+
+    div.addEventListener("touchmove",(e)=>{
+      let diff = e.touches[0].clientX - startX;
+      if(diff < -50){
+        div.classList.add("swipe-left");
+      }
+    });
+
+    div.addEventListener("touchend",()=>{
+      if(div.classList.contains("swipe-left")){
+        chats.splice(i,1);
+        renderChats();
+      }
+    });
+
+    // LONG PRESS PIN
+    let pressTimer;
+    div.addEventListener("touchstart",()=>{
+      pressTimer=setTimeout(()=>{
+        chats[i].pinned=!chats[i].pinned;
+        alert("Pinned toggled");
+      },800);
+    });
+    div.addEventListener("touchend",()=>clearTimeout(pressTimer));
+
+    list.appendChild(div);
+  });
+}
+
+renderChats();
+
+function newChat(){
+  let name = prompt("New chat name:");
+  if(name){
+    chats.unshift({name,msg:"New chat",pinned:false});
+    renderChats();
+  }
+}
+
+function filterChats(){
+  let val = document.getElementById("search").value.toLowerCase();
+  let items=document.querySelectorAll(".chat");
+  items.forEach(el=>{
+    el.style.display = el.innerText.toLowerCase().includes(val)?"flex":"none";
+  });
+}
+
+function switchPage(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+}
+
+/* CAMERA */
+let video = document.getElementById("video");
+
+function openCamera(){
+  document.getElementById("camera").style.display="flex";
+
+  navigator.mediaDevices.getUserMedia({video:true})
+  .then(stream=>{
+    video.srcObject=stream;
+  });
+}
+
+function closeCamera(){
+  document.getElementById("camera").style.display="none";
+  let stream = video.srcObject;
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+  }
+}
+
+function snap(){
+  let canvas=document.getElementById("canvas");
+  canvas.width=video.videoWidth;
+  canvas.height=video.videoHeight;
+
+  let ctx=canvas.getContext("2d");
+  ctx.drawImage(video,0,0);
+
+  let img=canvas.toDataURL("image/png");
+  alert("Photo captured!");
+  console.log(img);
+}
+
+</script>
 
 </body>
 </html>
