@@ -1,215 +1,778 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Relay Super App | Pro Architect Build</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
-    <style>
-        :root {
-            --soft-orange: #FF9800; --soft-grey: #F8F9FA; --dark-grey: #333;
-            --sms-green: #4CAF50; --email-yellow: #FFC107; --white: #ffffff;
-            --side-w: 65px; --header-h: 60px; --dock-h: 70px;
-        }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Relay Messaging</title>
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; outline: none; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--soft-grey); height: 100vh; display: flex; overflow: hidden; }
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
-        /* --- 1. ARCHITECTURAL LAYERING (The Fix) --- */
-        .sidebar { width: var(--side-w); background: var(--white); border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 25px; z-index: 1000; }
-        .s-icon { color: #999; cursor: pointer; transition: 0.2s; pointer-events: auto; }
-        .s-icon:hover, .s-icon.active { color: var(--soft-orange); }
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: "Segoe UI", sans-serif;
+}
 
-        .main-stage { flex: 1; display: flex; flex-direction: column; position: relative; height: 100vh; width: calc(100% - var(--side-w)); }
+body{
+    background:#ececec;
+    height:100vh;
+    overflow:hidden;
+}
 
-        /* --- 2. PREMIUM HEADER --- */
-        header { height: var(--header-h); background: var(--soft-orange); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 900; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo-group { display: flex; align-items: center; gap: 10px; cursor: pointer; pointer-events: auto; }
-        .header-actions { display: flex; align-items: center; gap: 18px; pointer-events: auto; }
+/* =========================
+   MAIN LAYOUT
+========================= */
 
-        /* --- 3. VIEW CONTROLLER --- */
-        .viewport { flex: 1; overflow-y: auto; position: relative; padding-bottom: 160px; z-index: 100; }
-        .view-page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
-        .view-page.active { display: flex; flex-direction: column; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.app{
+    display:flex;
+    height:100vh;
+    width:100%;
+}
 
-        /* --- 4. CHAT INTERFACE & TABS --- */
-        .service-tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab { padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; cursor: pointer; border: 1.5px solid transparent; }
-        .tab-relay { background: #FFF3E0; color: var(--soft-orange); border-color: var(--soft-orange); }
-        .tab-sms { background: #E8F5E9; color: var(--sms-green); }
-        .tab-email { background: #FFFDE7; color: var(--email-yellow); }
+/* =========================
+   SIDEBAR
+========================= */
 
-        .chat-bubble { background: white; padding: 12px 16px; border-radius: 18px 18px 18px 4px; align-self: flex-start; max-width: 85%; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
-        .status-tick { font-size: 10px; font-weight: 900; float: right; margin-left: 10px; }
-        .tick-sent { color: var(--soft-orange); }
-        .tick-read { color: #bbb; }
+.sidebar{
+    width:78px;
+    background:#f4f4f4;
+    border-right:1px solid #dddddd;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:18px;
+    gap:22px;
+}
 
-        /* --- 5. FAB & INPUT --- */
-        .fab-group { position: fixed; bottom: 150px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 1500; }
-        .fab { width: 56px; height: 56px; background: var(--soft-orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,152,0,0.4); cursor: pointer; pointer-events: auto; }
+.side-btn{
+    width:52px;
+    height:52px;
+    border-radius:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:.2s ease;
+    color:#666;
+}
 
-        .input-area { position: fixed; bottom: 85px; left: calc(var(--side-w) + 15px); right: 15px; background: white; border-radius: 30px; padding: 8px 15px; display: flex; align-items: center; gap: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.08); z-index: 1400; border: 1px solid #eee; }
-        .input-area input { flex: 1; border: none; font-size: 15px; background: transparent; }
+.side-btn:hover{
+    background:#ffb067;
+    color:white;
+    transform:scale(1.05);
+}
 
-        /* --- 6. macOS DOCK --- */
-        .mac-dock { position: fixed; bottom: 15px; left: 55%; transform: translateX(-50%); background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); padding: 8px 20px; border-radius: 35px; display: flex; gap: 12px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 2000; pointer-events: auto; }
-        .dock-btn { display: flex; flex-direction: column; align-items: center; color: #777; border: none; background: none; min-width: 55px; cursor: pointer; transition: 0.3s; }
-        .dock-btn.active { color: var(--soft-orange); transform: translateY(-5px); }
-        .dock-btn label { font-size: 8px; font-weight: 800; margin-top: 4px; text-transform: uppercase; }
+.side-btn.active{
+    background:#ff9b42;
+    color:white;
+    box-shadow:0 5px 15px rgba(255,155,66,0.3);
+}
 
-        /* --- 7. MEGA MENU --- */
-        #mega-menu { display: none; position: absolute; top: 65px; right: 15px; background: white; width: 240px; border-radius: 15px; box-shadow: 0 10px 50px rgba(0,0,0,0.2); z-index: 3000; overflow: hidden; border: 1px solid #eee; }
-        .menu-cat { padding: 10px 15px; background: #f9f9f9; font-size: 10px; font-weight: 800; color: #999; text-transform: uppercase; }
-        .menu-item { padding: 12px 15px; font-size: 13px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f2f2f2; }
-        .menu-item:hover { background: #fff8f0; }
+/* =========================
+   MAIN CONTENT
+========================= */
 
-        #camera-fullscreen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 5000; }
-    </style>
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header{
+    height:78px;
+    background:#f7f7f7;
+    border-bottom:1px solid #ddd;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 20px;
+}
+
+.header-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.logo{
+    width:48px;
+    height:48px;
+    border-radius:16px;
+    background:#ff9b42;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(255,155,66,0.4);
+}
+
+.logo:hover{
+    transform:scale(1.05);
+}
+
+.brand{
+    font-size:22px;
+    font-weight:700;
+    color:#444;
+}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.search-box{
+    background:#ececec;
+    border-radius:20px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    width:220px;
+}
+
+.search-box input{
+    border:none;
+    outline:none;
+    background:transparent;
+    width:100%;
+    color:#555;
+}
+
+.icon-btn{
+    width:42px;
+    height:42px;
+    border-radius:14px;
+    background:#ececec;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.icon-btn:hover{
+    background:#ffb067;
+    color:white;
+}
+
+/* =========================
+   CHAT TABS
+========================= */
+
+.top-tabs{
+    display:flex;
+    gap:10px;
+    padding:18px 22px;
+}
+
+.tab{
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    color:white;
+}
+
+.relay{
+    background:#ff9b42;
+}
+
+.sms{
+    background:#62c16f;
+}
+
+.email{
+    background:#f3c64f;
+    color:#444;
+}
+
+/* =========================
+   CHAT LIST
+========================= */
+
+.chat-list{
+    flex:1;
+    overflow-y:auto;
+    padding:0 20px 120px 20px;
+}
+
+.chat-card{
+    background:white;
+    border-radius:22px;
+    padding:16px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    transition:.2s ease;
+    box-shadow:0 4px 12px rgba(0,0,0,0.04);
+}
+
+.chat-card:hover{
+    transform:translateY(-2px);
+}
+
+.chat-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.avatar{
+    width:56px;
+    height:56px;
+    border-radius:18px;
+    background:#ffb067;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    font-weight:700;
+}
+
+.chat-info h3{
+    font-size:16px;
+    color:#444;
+}
+
+.chat-info p{
+    margin-top:4px;
+    color:#777;
+    font-size:13px;
+}
+
+.chat-right{
+    text-align:right;
+}
+
+.time{
+    font-size:12px;
+    color:#999;
+    margin-bottom:8px;
+}
+
+.tick{
+    display:flex;
+    justify-content:flex-end;
+    gap:3px;
+}
+
+.tick span{
+    font-size:18px;
+}
+
+/* SENT */
+.sent{
+    color:#ff9b42;
+}
+
+/* RECEIVED */
+.received{
+    color:#999;
+}
+
+/* READ */
+.read{
+    color:#777;
+}
+
+/* =========================
+   FAB
+========================= */
+
+.fab-container{
+    position:absolute;
+    right:24px;
+    bottom:90px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.fab{
+    width:60px;
+    height:60px;
+    border-radius:20px;
+    background:#ff9b42;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 8px 25px rgba(255,155,66,0.4);
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.fab:hover{
+    transform:scale(1.08);
+}
+
+/* =========================
+   BOTTOM NAV
+========================= */
+
+.bottom-nav{
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:74px;
+    background:#f7f7f7;
+    border-top:1px solid #ddd;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.dock{
+    background:white;
+    padding:10px 24px;
+    border-radius:24px;
+    display:flex;
+    gap:30px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+
+.dock-item{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    cursor:pointer;
+    color:#666;
+    transition:.2s;
+}
+
+.dock-item:hover{
+    transform:translateY(-3px);
+    color:#ff9b42;
+}
+
+.dock-item span{
+    font-size:12px;
+    margin-top:4px;
+}
+
+/* =========================
+   MENU DROPDOWN
+========================= */
+
+.dropdown{
+    position:absolute;
+    top:78px;
+    right:20px;
+    width:290px;
+    background:white;
+    border-radius:22px;
+    padding:18px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.15);
+    display:none;
+    z-index:999;
+}
+
+.dropdown.active{
+    display:block;
+}
+
+.dropdown h4{
+    margin-bottom:12px;
+    color:#ff9b42;
+    font-size:15px;
+}
+
+.dropdown ul{
+    list-style:none;
+    margin-bottom:18px;
+}
+
+.dropdown li{
+    padding:10px 0;
+    border-bottom:1px solid #eee;
+    color:#555;
+    font-size:14px;
+    cursor:pointer;
+}
+
+.dropdown li:hover{
+    color:#ff9b42;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:900px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .search-box{
+        width:140px;
+    }
+
+    .dock{
+        gap:16px;
+        padding:10px 16px;
+    }
+
+}
+</style>
 </head>
+
 <body>
 
-    <aside class="sidebar">
-        <i data-lucide="home" class="s-icon active" onclick="nav('v-home', 'd-home')"></i>
-        <i data-lucide="briefcase" class="s-icon"></i>
-        <i data-lucide="users" class="s-icon"></i>
-        <i data-lucide="user-plus" class="s-icon"></i>
-        <i data-lucide="message-square-more" class="s-icon" onclick="nav('v-chat', 'd-chat')"></i>
-        <i data-lucide="mail" class="s-icon"></i>
-    </aside>
+<div class="app">
 
-    <div class="main-stage">
-        <header>
-            <div class="logo-group" onclick="launchCamera()">
-                <i data-lucide="aperture" size="26"></i>
-                <span style="letter-spacing:1px">RELAY</span>
-            </div>
-            <div class="header-actions">
-                <i data-lucide="search" size="20" style="background:rgba(255,255,255,0.2); padding:5px; border-radius:50%"></i>
-                <i data-lucide="more-vertical" size="24" onclick="toggleMegaMenu()"></i>
-            </div>
-        </header>
+    <!-- SIDEBAR -->
 
-        <div id="mega-menu">
-            <div class="menu-cat">Profile</div>
-            <div class="menu-item"><i data-lucide="image" size="16"></i> Display & Background</div>
-            <div class="menu-item"><i data-lucide="edit-3" size="16"></i> Change Name & Bio</div>
-            <div class="menu-cat">Account & Privacy</div>
-            <div class="menu-item"><i data-lucide="shield-check" size="16"></i> E2E Encryption</div>
-            <div class="menu-item"><i data-lucide="lock" size="16"></i> Security & P2P</div>
-            <div class="menu-cat">Settings</div>
-            <div class="menu-item"><i data-lucide="palette" size="16"></i> Theme & Fonts</div>
-            <div class="menu-item"><i data-lucide="bell" size="16"></i> Notifications</div>
+    <div class="sidebar">
+
+        <div class="side-btn active">
+            <span class="material-icons-round">home</span>
         </div>
 
-        <div class="viewport">
-            <div id="v-home" class="view-page active">
-                <h2 style="color:var(--dark-grey); margin-bottom:20px;">Relay Dashboard</h2>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div style="background:white; padding:20px; border-radius:20px; text-align:center;" onclick="nav('v-chat', 'd-chat')">
-                        <i data-lucide="messages-square" color="var(--soft-orange)"></i>
-                        <p style="margin-top:10px; font-weight:700">Chats</p>
-                    </div>
-                    <div style="background:white; padding:20px; border-radius:20px; text-align:center;">
-                        <i data-lucide="sparkles" color="#673AB7"></i>
-                        <p style="margin-top:10px; font-weight:700">AI Search</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="v-chat" class="view-page">
-                <div class="service-tabs">
-                    <div class="tab tab-relay">RELAY</div>
-                    <div class="tab tab-sms">SMS</div>
-                    <div class="tab tab-email">EMAIL</div>
-                </div>
-                <div id="chat-stream">
-                    <div class="chat-bubble">Premium UI Loaded. All systems operational.<span class="status-tick tick-sent">✓✓</span></div>
-                </div>
-            </div>
+        <div class="side-btn">
+            <span class="material-icons-round">work</span>
         </div>
 
-        <div class="fab-group">
-            <div class="fab" style="background:#444;"><i data-lucide="search" size="24"></i></div>
-            <div class="fab"><i data-lucide="plus" size="28"></i></div>
+        <div class="side-btn">
+            <span class="material-icons-round">groups</span>
         </div>
 
-        <div class="input-area" id="ui-input" style="display:none">
-            <i data-lucide="paperclip" color="#888"></i>
-            <input type="text" id="msg-input" placeholder="Message Relay...">
-            <i data-lucide="mic" color="var(--soft-orange)"></i>
-            <i data-lucide="send" id="send-btn" color="var(--soft-orange)"></i>
+        <div class="side-btn">
+            <span class="material-icons-round">favorite</span>
         </div>
 
-        <nav class="mac-dock">
-            <button class="dock-btn" id="d-chat" onclick="nav('v-chat', 'd-chat')"><i data-lucide="message-circle"></i><label>Chats</label></button>
-            <button class="dock-btn" id="d-contacts"><i data-lucide="book-user"></i><label>Contacts</label></button>
-            <button class="dock-btn active" id="d-home" onclick="nav('v-home', 'd-home')"><i data-lucide="layout-grid"></i><label>Status</label></button>
-            <button class="dock-btn" id="d-call"><i data-lucide="video"></i><label>Calls</label></button>
-            <button class="dock-btn"><i data-lucide="zap"></i><label>AI</label></button>
-        </nav>
+        <div class="side-btn">
+            <span class="material-icons-round">sms</span>
+        </div>
+
+        <div class="side-btn">
+            <span class="material-icons-round">email</span>
+        </div>
+
     </div>
 
-    <div id="camera-fullscreen">
-        <button onclick="location.reload()" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); background:red; color:white; padding:18px 45px; border-radius:40px; border:none; font-weight:bold; cursor:pointer; z-index:6000;">CLOSE CAMERA</button>
+    <!-- MAIN -->
+
+    <div class="main">
+
+        <!-- HEADER -->
+
+        <div class="header">
+
+            <div class="header-left">
+
+                <div class="logo" onclick="openCamera()">
+                    <span class="material-icons-round">bolt</span>
+                </div>
+
+                <div class="brand">Relay Messaging</div>
+
+            </div>
+
+            <div class="header-right">
+
+                <div class="search-box">
+                    <span class="material-icons-round">search</span>
+                    <input type="text" placeholder="Search chats..." />
+                </div>
+
+                <div class="icon-btn">
+                    <span class="material-icons-round">auto_awesome</span>
+                </div>
+
+                <div class="icon-btn" onclick="toggleMenu()">
+                    <span class="material-icons-round">more_vert</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- DROPDOWN -->
+
+        <div class="dropdown" id="dropdownMenu">
+
+            <h4>Profile</h4>
+            <ul>
+                <li>Change display image</li>
+                <li>Change background image</li>
+                <li>Change chat name</li>
+                <li>Add bio</li>
+                <li>Greeting / status message</li>
+            </ul>
+
+            <h4>Account</h4>
+            <ul>
+                <li>Phone number</li>
+                <li>Email</li>
+                <li>Security</li>
+                <li>P2P connection</li>
+                <li>End-to-end encryption</li>
+                <li>Logged-in devices</li>
+                <li>Delete account</li>
+                <li>Blocked accounts</li>
+                <li>Data & storage management</li>
+            </ul>
+
+            <h4>Settings</h4>
+            <ul>
+                <li>Change theme</li>
+                <li>Change font</li>
+                <li>Notification settings</li>
+                <li>Wallpaper customization</li>
+                <li>Night mode</li>
+            </ul>
+
+            <h4>Help</h4>
+            <ul>
+                <li>Feedback</li>
+                <li>Privacy Policy</li>
+                <li>Updates</li>
+            </ul>
+
+        </div>
+
+        <!-- TABS -->
+
+        <div class="top-tabs">
+
+            <div class="tab relay">Relay</div>
+            <div class="tab sms">SMS</div>
+            <div class="tab email">Email</div>
+
+        </div>
+
+        <!-- CHAT LIST -->
+
+        <div class="chat-list">
+
+            <div class="chat-card">
+
+                <div class="chat-left">
+
+                    <div class="avatar">A</div>
+
+                    <div class="chat-info">
+                        <h3>Alex Morgan</h3>
+                        <p>See you tomorrow 🔥</p>
+                    </div>
+
+                </div>
+
+                <div class="chat-right">
+
+                    <div class="time">10:42 AM</div>
+
+                    <div class="tick">
+                        <span class="material-icons-round sent">done</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="chat-card">
+
+                <div class="chat-left">
+
+                    <div class="avatar">J</div>
+
+                    <div class="chat-info">
+                        <h3>Jessica Lee</h3>
+                        <p>Project files uploaded.</p>
+                    </div>
+
+                </div>
+
+                <div class="chat-right">
+
+                    <div class="time">Yesterday</div>
+
+                    <div class="tick">
+                        <span class="material-icons-round received">done</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="chat-card">
+
+                <div class="chat-left">
+
+                    <div class="avatar">R</div>
+
+                    <div class="chat-info">
+                        <h3>Ryan Cooper</h3>
+                        <p>Voice call later?</p>
+                    </div>
+
+                </div>
+
+                <div class="chat-right">
+
+                    <div class="time">Monday</div>
+
+                    <div class="tick">
+                        <span class="material-icons-round read">done_all</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FAB -->
+
+        <div class="fab-container">
+
+            <div class="fab">
+                <span class="material-icons-round">person_search</span>
+            </div>
+
+            <div class="fab">
+                <span class="material-icons-round">add</span>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM NAV -->
+
+        <div class="bottom-nav">
+
+            <div class="dock">
+
+                <div class="dock-item">
+                    <span class="material-icons-round">chat</span>
+                    <span>Chats</span>
+                </div>
+
+                <div class="dock-item">
+                    <span class="material-icons-round">contacts</span>
+                    <span>Contacts</span>
+                </div>
+
+                <div class="dock-item">
+                    <span class="material-icons-round">radio_button_checked</span>
+                    <span>Status</span>
+                </div>
+
+                <div class="dock-item">
+                    <span class="material-icons-round">videocam</span>
+                    <span>Calls</span>
+                </div>
+
+                <div class="dock-item">
+                    <span class="material-icons-round">smart_toy</span>
+                    <span>AI</span>
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyDC1a-bGXLrA8SqWPE4LTGlNNWb9PXql04",
-            authDomain: "gen-lang-client-0720380653.firebaseapp.com",
-            databaseURL: "https://gen-lang-client-0720380653-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "gen-lang-client-0720380653",
-            storageBucket: "gen-lang-client-0720380653.firebasestorage.app",
-            messagingSenderId: "128069738880",
-            appId: "1:128069738880:web:60a8f36bf359ebf9e06165"
-        };
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const chatRef = ref(db, "messages");
+<script>
 
-        lucide.createIcons();
+function toggleMenu(){
+    document
+        .getElementById("dropdownMenu")
+        .classList
+        .toggle("active");
+}
 
-        window.nav = (vId, dId) => {
-            document.querySelectorAll('.view-page').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.dock-btn').forEach(d => d.classList.remove('active'));
-            document.getElementById(vId).classList.add('active');
-            document.getElementById(dId).classList.add('active');
-            document.getElementById('ui-input').style.display = (vId === 'v-chat') ? 'flex' : 'none';
-        };
+function openCamera(){
 
-        window.toggleMegaMenu = () => {
-            const m = document.getElementById('mega-menu');
-            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        };
+    if(navigator.mediaDevices){
 
-        window.launchCamera = async () => {
-            document.getElementById('camera-fullscreen').style.display = 'block';
-            const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-            await client.join("cf58cde3ad4b45b29b65dc4e01b92ae1", "relay-room", null);
-            const track = await AgoraRTC.createCameraVideoTrack();
-            track.play('camera-fullscreen');
-            await client.publish([track]);
-        };
-
-        document.getElementById('send-btn').onclick = () => {
-            const val = document.getElementById('msg-input').value;
-            if(val) { push(chatRef, { text: val }); document.getElementById('msg-input').value = ""; }
-        };
-
-        onChildAdded(chatRef, (snap) => {
-            const stream = document.getElementById('chat-stream');
-            const div = document.createElement('div');
-            div.className = 'chat-bubble';
-            div.innerHTML = `${snap.val().text}<span class="status-tick tick-sent">✓✓</span>`;
-            stream.appendChild(div);
-            document.querySelector('.viewport').scrollTop = stream.scrollHeight;
+        navigator.mediaDevices.getUserMedia({
+            video:true
+        })
+        .then(() => {
+            alert("Camera access granted.");
+        })
+        .catch(() => {
+            alert("Camera permission denied.");
         });
-    </script>
+
+    } else {
+
+        alert("Camera not supported.");
+
+    }
+
+}
+
+/* Swipe Simulation */
+
+document.querySelectorAll(".chat-card").forEach(card => {
+
+    let startX = 0;
+
+    card.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
+    });
+
+    card.addEventListener("touchend", e => {
+
+        let endX = e.changedTouches[0].clientX;
+
+        if(startX - endX > 80){
+            alert("Chat archived");
+        }
+
+        if(endX - startX > 80){
+            alert("Chat deleted");
+        }
+
+    });
+
+});
+
+/* Long Press Pin */
+
+document.querySelectorAll(".chat-card").forEach(card => {
+
+    let pressTimer;
+
+    card.addEventListener("mousedown", function(){
+
+        pressTimer = window.setTimeout(function(){
+
+            card.style.border = "2px solid #ff9b42";
+            alert("Chat pinned");
+
+        }, 3000);
+
+    });
+
+    card.addEventListener("mouseup", function(){
+        clearTimeout(pressTimer);
+    });
+
+});
+
+</script>
+
 </body>
 </html>
