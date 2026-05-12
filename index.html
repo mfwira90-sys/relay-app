@@ -2,170 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Relay Messaging | Pro Build v6.0</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relay Product Specification</title>
     <style>
+        /* CSS - The Styling */
         :root {
-            --orange: #FF9800; --grey: #F2F4F7; --white: #ffffff;
-            --side-w: 65px; --header-h: 60px;
+            --soft-orange: #ffb347;
+            --soft-grey: #f5f5f5;
+            --dark-grey: #333;
+            --sms-green: #90ee90;
+            --email-yellow: #fffacd;
         }
 
-        /* --- STAGE 1: LAYER ISOLATION (THE TOUCH FIX) --- */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { font-family: -apple-system, sans-serif; background: var(--grey); height: 100vh; overflow: hidden; display: flex; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+            background-color: var(--soft-grey);
+            color: var(--dark-grey);
+        }
 
-        /* SIDEBAR: Highest Layer (Floor 5000) */
-        .sidebar { width: var(--side-w); background: var(--white); border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; padding: 25px 0; gap: 30px; z-index: 5000; position: relative; }
-        .s-btn { color: #888; cursor: pointer; pointer-events: auto !important; }
-        .s-btn.active { color: var(--orange); }
+        /* Sidebar Styling */
+        .sidebar {
+            width: 80px;
+            background-color: white;
+            height: 100vh;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            border-right: 1px solid #ddd;
+        }
 
-        .app-frame { flex: 1; display: flex; flex-direction: column; position: relative; height: 100vh; }
+        .sidebar-icon {
+            margin: 15px 0;
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+        }
 
-        /* HEADER: High Layer (Floor 4000) */
-        header { height: var(--header-h); background: var(--orange); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 4000; position: relative; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo-area { display: flex; align-items: center; gap: 10px; cursor: pointer; pointer-events: auto !important; z-index: 4100; font-weight: 900; }
+        /* Main Content Styling */
+        .container {
+            margin-left: 100px;
+            padding: 40px;
+            max-width: 900px;
+        }
 
-        /* VIEWPORT: Content Layer (Floor 100) */
-        .viewport { flex: 1; overflow-y: auto; position: relative; z-index: 100; padding-bottom: 180px; }
-        .view { display: none; padding: 20px; }
-        .view.active { display: block; }
+        header {
+            background: var(--soft-orange);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        /* --- STAGE 2: DOCK & FAB (Floor 6000+) --- */
-        .dock-layer { position: fixed; bottom: 15px; left: 58%; transform: translateX(-50%); z-index: 8000; pointer-events: auto !important; }
-        .mac-dock { background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); padding: 10px 22px; border-radius: 35px; display: flex; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.1); }
-        .d-btn { display: flex; flex-direction: column; align-items: center; color: #777; border: none; background: none; min-width: 55px; cursor: pointer; }
-        .d-btn.active { color: var(--orange); }
-        .d-btn label { font-size: 8px; font-weight: 900; margin-top: 4px; text-transform: uppercase; }
+        h1, h2 { color: var(--dark-grey); }
 
-        .fab { position: fixed; bottom: 155px; right: 20px; width: 62px; height: 62px; background: var(--orange); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 20px rgba(255,152,0,0.4); z-index: 7000; cursor: pointer; pointer-events: auto !important; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
 
-        /* --- STAGE 3: MEGA MENU (Floor 9000) --- */
-        #mega-menu { display: none; position: absolute; top: 65px; right: 10px; background: white; width: 260px; border-radius: 15px; box-shadow: 0 10px 50px rgba(0,0,0,0.3); z-index: 9000; border: 1px solid #eee; overflow: hidden; }
-        .m-row { padding: 14px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-bottom: 1px solid #f2f2f2; pointer-events: auto !important; font-size: 14px; }
-        .m-label { background: #f9f9f9; padding: 8px 15px; font-size: 10px; font-weight: 900; color: #999; }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
 
-        /* --- STAGE 4: CHAT COMPONENTS --- */
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 800; }
-        .chat-card { background: white; padding: 18px; border-radius: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid #eee; pointer-events: auto !important; position: relative; overflow: hidden; transition: 0.2s; }
-        .chat-card:active { background: #fcfcfc; transform: scale(0.98); }
+        th { background-color: #eee; }
 
-        /* --- STAGE 5: CAMERA OVERLAY (Floor 10000) --- */
-        #cam-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .shutter { width: 75px; height: 75px; border-radius: 50%; border: 5px solid white; background: transparent; cursor: pointer; margin-top: 40px; pointer-events: auto !important; }
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--soft-orange);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <i data-lucide="home" class="s-btn active" onclick="nav('v-home', 'd-home')"></i>
-        <i data-lucide="briefcase" class="s-btn" onclick="alert('Work Access')"></i>
-        <i data-lucide="users" class="s-btn" onclick="alert('Team Access')"></i>
-        <i data-lucide="mail" class="s-btn" onclick="alert('Email Access')"></i>
-    </aside>
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-icon">🏠<br>Home</div>
+        <div class="sidebar-icon">💼<br>Work</div>
+        <div class="sidebar-icon">👥<br>Team</div>
+        <div class="sidebar-icon">✉️<br>SMS</div>
+    </div>
 
-    <div class="app-frame">
+    <!-- Main Content -->
+    <div class="container">
+        
         <header>
-            <div class="logo-area" onclick="launchCam()">
-                <i data-lucide="aperture" size="28"></i>
-                <span>RELAY</span>
-            </div>
-            <div style="display:flex; gap:12px; align-items:center;">
-                <i data-lucide="search" size="20" onclick="alert('Search Active')"></i>
-                <i data-lucide="more-vertical" size="24" onclick="toggleMenu()" style="cursor:pointer"></i>
-            </div>
+            <div class="logo">🟠 Relay Logo</div>
+            <div class="nav-icons">🔍 ☰</div>
         </header>
 
-        <div id="mega-menu">
-            <div class="m-label">PROFILE</div>
-            <div class="m-row" onclick="alert('Editing Profile...')"><i data-lucide="user"></i> Display & Bio</div>
-            <div class="m-label">ACCOUNT</div>
-            <div class="m-row" onclick="alert('Account Secure')"><i data-lucide="lock"></i> Security & P2P</div>
-            <div class="m-label">SETTINGS</div>
-            <div class="m-row" onclick="alert('Switching Theme')"><i data-lucide="settings"></i> Theme & Font</div>
-        </div>
+        <section>
+            <h1>Product Specification: Relay</h1>
+            <p>Unified messaging app: WhatsApp, Telegram, SMS, and Email in one interface.</p>
+            
+            <table>
+                <tr><th>Detail</th><th>Info</th></tr>
+                <tr><td>App Type</td><td>Unified Messaging</td></tr>
+                <tr><td>Platforms</td><td>Mobile (iOS & Android)</td></tr>
+                <tr><td>Primary Colors</td><td>Soft Orange + Soft Grey</td></tr>
+            </table>
+        </section>
 
-        <div class="viewport">
-            <div id="v-home" class="view active">
-                <div class="tabs">
-                    <div class="tab" style="background:#FFF3E0; color:var(--orange);">RELAY</div>
-                    <div class="tab" style="background:#E8F5E9; color:#4CAF50;">SMS</div>
-                </div>
-                <div class="chat-card" oncontextmenu="pin(this); return false;" id="chat1">
-                    <div style="width:50px; height:50px; background:var(--orange); border-radius:50%;"></div>
-                    <div style="flex:1">
-                        <strong>Relay Support</strong>
-                        <p style="font-size:12px; color:#888;">Swipe left to delete...</p>
-                    </div>
-                </div>
-            </div>
-            <div id="v-status" class="view"><h3>Status & Reminders</h3></div>
-            <div id="v-calls" class="view"><h3>Video Calls (Google Meet)</h3></div>
-            <div id="v-ai" class="view"><h3>AI Search (20 Free)</h3></div>
-        </div>
+        <section>
+            <h2>Home Screen & Navigation</h2>
+            <table>
+                <tr><th>Tab</th><th>Function</th></tr>
+                <tr><td>💬 Chats</td><td>Chat list & contacts</td></tr>
+                <tr><td>🟠 Status</td><td>Stories & updates</td></tr>
+                <tr><td>📞 Calls</td><td>Voice & video calls</td></tr>
+                <tr><td>🤖 AI Search</td><td>Cross-platform AI search</td></tr>
+            </table>
+        </section>
 
-        <div class="fab" onclick="alert('Finding Contacts...')"><i data-lucide="plus" size="32"></i></div>
+        <section>
+            <h2>Chat Filters</h2>
+            <ul>
+                <li><span style="color: var(--soft-orange)">●</span> <strong>Relay:</strong> Internal messages</li>
+                <li><span style="color: green">●</span> <strong>SMS:</strong> Carrier messages</li>
+                <li><span style="color: gold">●</span> <strong>Email:</strong> Work/Personal mail</li>
+            </ul>
+        </section>
 
-        <div class="dock-layer">
-            <div class="mac-dock">
-                <button class="d-btn active" id="d-home" onclick="nav('v-home', 'd-home')"><i data-lucide="message-circle"></i><label>Chats</label></button>
-                <button class="d-btn" id="d-status" onclick="nav('v-status', 'd-status')"><i data-lucide="circle-dashed"></i><label>Status</label></button>
-                <button class="d-btn" id="d-calls" onclick="nav('v-calls', 'd-calls')"><i data-lucide="phone"></i><label>Calls</label></button>
-                <button class="d-btn" id="d-ai" onclick="nav('v-ai', 'd-ai')"><i data-lucide="zap"></i><label>AI</label></button>
-            </div>
-        </div>
+        <section>
+            <h2>Message Status Indicators</h2>
+            <table>
+                <tr><th>Status</th><th>Indicator</th></tr>
+                <tr><td>Sent</td><td>Single grey tick</td></tr>
+                <tr><td>Delivered</td><td>Double grey tick</td></tr>
+                <tr><td>Read</td><td style="color: var(--soft-orange); font-weight: bold;">Double orange tick</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>AI Capabilities</h2>
+            <blockquote>
+                Relay connects to the top 10 AI platforms worldwide, providing 20 free searches per day to all users.
+            </blockquote>
+        </section>
+
     </div>
 
-    <div id="cam-overlay">
-        <video id="v-stream" autoplay playsinline style="width:100%; height:75%; object-fit:cover;"></video>
-        <div class="shutter" onclick="alert('Photo Snapped!')"></div>
-        <button onclick="closeCam()" style="margin-top:20px; background:white; color:black; padding:12px 35px; border-radius:30px; border:none; font-weight:bold;">EXIT</button>
-    </div>
+    <!-- Floating Action Button -->
+    <div class="fab">+</div>
 
-    <script>
-        lucide.createIcons();
-
-        // 1. Navigation Controller
-        window.nav = (p, d) => {
-            document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.d-btn').forEach(x => x.classList.remove('active'));
-            document.getElementById(p).classList.add('active');
-            document.getElementById(d).classList.add('active');
-            document.getElementById('mega-menu').style.display = 'none';
-        };
-
-        // 2. Camera Controller
-        let stream;
-        window.launchCam = async () => {
-            document.getElementById('cam-overlay').style.display = 'flex';
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                document.getElementById('v-stream').srcObject = stream;
-            } catch (err) { alert("Camera Permission Required"); }
-        };
-        window.closeCam = () => {
-            if(stream) stream.getTracks().forEach(t => t.stop());
-            document.getElementById('cam-overlay').style.display = 'none';
-        };
-
-        // 3. UI Interactions
-        window.toggleMenu = () => {
-            const m = document.getElementById('mega-menu');
-            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-        };
-
-        window.pin = (el) => {
-            el.style.borderLeft = "5px solid var(--orange)";
-            alert("Chat Pinned");
-        };
-
-        // 4. Swipe Logic
-        let touchStart = 0;
-        document.getElementById('chat1').addEventListener('touchstart', (e) => touchStart = e.touches[0].clientX);
-        document.getElementById('chat1').addEventListener('touchend', (e) => {
-            if (touchStart - e.changedTouches[0].clientX > 80) alert("Chat Deleted");
-        });
-    </script>
 </body>
 </html>
