@@ -2,176 +2,559 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relay Product Specification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Relay Messaging</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS - The Styling */
         :root {
-            --soft-orange: #ffb347;
-            --soft-grey: #f5f5f5;
-            --dark-grey: #333;
-            --sms-green: #90ee90;
-            --email-yellow: #fffacd;
+            --soft-orange: #FFB347;
+            --soft-grey: #F2F2F7;
+            --sms-green: #34C759;
+            --email-yellow: #FFCC00;
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            display: flex;
             background-color: var(--soft-grey);
-            color: var(--dark-grey);
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            width: 80px;
-            background-color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
             height: 100vh;
-            position: fixed;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
-            border-right: 1px solid #ddd;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .bg-soft-orange { background-color: var(--soft-orange); }
+        .text-soft-orange { color: var(--soft-orange); }
+        .bg-soft-grey { background-color: var(--soft-grey); }
+        
+        .macos-dock {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        .sidebar-icon {
-            margin: 15px 0;
-            font-size: 0.8rem;
-            text-align: center;
-            cursor: pointer;
-        }
-
-        /* Main Content Styling */
-        .container {
-            margin-left: 100px;
-            padding: 40px;
-            max-width: 900px;
-        }
-
-        header {
-            background: var(--soft-orange);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1, h2 { color: var(--dark-grey); }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+        .chat-item {
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 2;
             background: white;
         }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-
-        th { background-color: #eee; }
-
-        .fab {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--soft-orange);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+        .chat-actions {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 30px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1;
         }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-weight: bold;
+        .app-view {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: white;
+            z-index: 40;
+            flex-direction: column;
         }
+        .app-view.active { display: flex; }
+
+        .dropdown-menu {
+            display: none;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .dropdown-menu.active { display: block; }
+
+        /* Long press animation */
+        @keyframes fillPin {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 15px var(--soft-orange); }
+        }
+        .pressing { animation: fillPin 3s forwards; }
     </style>
 </head>
-<body>
+<body class="relative">
 
-    <!-- Left Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-icon">🏠<br>Home</div>
-        <div class="sidebar-icon">💼<br>Work</div>
-        <div class="sidebar-icon">👥<br>Team</div>
-        <div class="sidebar-icon">✉️<br>SMS</div>
-    </div>
+    <!-- HEADER -->
+    <header class="bg-soft-orange h-16 flex items-center justify-between px-3 z-50 text-white relative shadow-md">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="openCamera()">
+            <i class="fa-solid fa-camera-retro text-2xl drop-shadow-md"></i>
+            <h1 class="font-bold text-xl tracking-wide ml-1">Relay</h1>
+        </div>
 
-    <!-- Main Content -->
-    <div class="container">
-        
-        <header>
-            <div class="logo">🟠 Relay Logo</div>
-            <div class="nav-icons">🔍 ☰</div>
-        </header>
-
-        <section>
-            <h1>Product Specification: Relay</h1>
-            <p>Unified messaging app: WhatsApp, Telegram, SMS, and Email in one interface.</p>
+        <div class="flex items-center gap-3">
+            <!-- Search Date Bubble -->
+            <div class="bg-white/20 rounded-full flex items-center px-3 py-1.5 backdrop-blur-sm cursor-text">
+                <i class="fa-solid fa-magnifying-glass text-xs mr-2"></i>
+                <input type="date" class="bg-transparent outline-none text-xs text-white appearance-none h-5 w-5 opacity-0 absolute cursor-pointer" onchange="alert('Searching date: ' + this.value)">
+                <i class="fa-regular fa-calendar-days text-sm"></i>
+            </div>
             
-            <table>
-                <tr><th>Detail</th><th>Info</th></tr>
-                <tr><td>App Type</td><td>Unified Messaging</td></tr>
-                <tr><td>Platforms</td><td>Mobile (iOS & Android)</td></tr>
-                <tr><td>Primary Colors</td><td>Soft Orange + Soft Grey</td></tr>
-            </table>
+            <!-- 3 Dot Menu -->
+            <div class="relative">
+                <button onclick="toggleMenu()" class="p-2 hover:bg-white/10 rounded-full transition">
+                    <i class="fa-solid fa-ellipsis-vertical text-lg"></i>
+                </button>
+                
+                <div id="main-menu" class="dropdown-menu absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl text-gray-800 border border-gray-100 z-50">
+                    <!-- Profile -->
+                    <div class="p-3 border-b hover:bg-gray-50">
+                        <p class="font-bold text-sm text-soft-orange"><i class="fa-solid fa-user mr-2"></i>Profile</p>
+                        <div class="text-[11px] text-gray-500 mt-1 grid grid-cols-2 gap-1">
+                            <button class="text-left hover:text-black">Change Display Img</button>
+                            <button class="text-left hover:text-black">Change Bg Image</button>
+                            <button class="text-left hover:text-black">Chat Name</button>
+                            <button class="text-left hover:text-black">Add Bio</button>
+                            <button class="text-left hover:text-black col-span-2">Greet Message</button>
+                        </div>
+                    </div>
+                    <!-- Account -->
+                    <div class="p-3 border-b hover:bg-gray-50">
+                        <p class="font-bold text-sm text-soft-orange"><i class="fa-solid fa-shield-halved mr-2"></i>Account</p>
+                        <div class="text-[11px] text-gray-500 mt-1 grid grid-cols-2 gap-1">
+                            <button class="text-left hover:text-black">Phone Number</button>
+                            <button class="text-left hover:text-black">Email</button>
+                            <button class="text-left hover:text-black">Security</button>
+                            <button class="text-left hover:text-black">P2P Encrypted</button>
+                            <button class="text-left hover:text-black">Device Log In</button>
+                            <button class="text-left hover:text-black">Deleted Account</button>
+                            <button class="text-left hover:text-black">Blocked Accounts</button>
+                            <button class="text-left hover:text-black">Data & Storage</button>
+                        </div>
+                    </div>
+                    <!-- Settings -->
+                    <div class="p-3 border-b hover:bg-gray-50">
+                        <p class="font-bold text-sm text-soft-orange"><i class="fa-solid fa-gear mr-2"></i>Settings</p>
+                        <div class="text-[11px] text-gray-500 mt-1 grid grid-cols-2 gap-1">
+                            <button class="text-left hover:text-black">Change Theme</button>
+                            <button class="text-left hover:text-black">Change Font</button>
+                            <button class="text-left hover:text-black">Change Sounds</button>
+                            <button class="text-left hover:text-black">Notification</button>
+                            <button class="text-left hover:text-black">Wallpaper</button>
+                            <button class="text-left hover:text-black">Night Mode</button>
+                        </div>
+                    </div>
+                    <!-- Help & Update -->
+                    <div class="p-3 hover:bg-gray-50 flex flex-col gap-1 text-[11px] font-bold text-gray-600">
+                        <button class="text-left hover:text-soft-orange">Help & Feedback</button>
+                        <button class="text-left hover:text-soft-orange">Privacy Policy</button>
+                        <button class="text-left text-blue-500">Check for Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="flex h-[calc(100vh-4rem)] w-full relative">
+        
+        <!-- THIN VERTICAL SIDEBAR -->
+        <aside class="w-[50px] bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-5 overflow-y-auto no-scrollbar shadow-sm z-10 shrink-0">
+            <button class="text-soft-orange text-lg"><i class="fa-solid fa-house"></i></button>
+            <button class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-briefcase"></i></button>
+            <button class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-users-viewfinder"></i></button>
+            <button class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-user-group"></i></button>
+            <button class="text-sms-green text-lg"><i class="fa-solid fa-comment-sms"></i></button>
+            <button class="text-email-yellow text-lg"><i class="fa-solid fa-envelope"></i></button>
+        </aside>
+
+        <!-- CHAT LIST CONTAINER -->
+        <section id="view-home" class="flex-1 bg-white relative overflow-hidden flex flex-col">
+            <div class="overflow-y-auto flex-1 no-scrollbar pb-24">
+                
+                <!-- Chat Row 1 -->
+                <div class="relative w-full border-b border-gray-100 overflow-hidden" onmousedown="startPin(this)" onmouseup="cancelPin()" onmouseleave="cancelPin()" ontouchstart="startPin(this)" ontouchend="cancelPin()">
+                    <div class="chat-actions bg-red-500 w-32 justify-end items-center pr-4 text-white gap-4">
+                        <button onclick="alert('Chat Archived')"><i class="fa-solid fa-box-archive"></i></button>
+                        <button onclick="alert('Chat Deleted')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="chat-item flex items-center p-3 cursor-pointer" onclick="openChat('Alex', 'relay')" onmousedown="initSwipe(event, this)" ontouchstart="initSwipe(event, this)">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 mr-3 border-2 border-soft-orange p-0.5"><img src="https://i.pravatar.cc/150?u=1" class="rounded-full w-full h-full"></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center"><h3 class="font-bold text-[15px]">Alex Rivera</h3><span class="text-[10px] text-gray-400">12:45 PM</span></div>
+                            <div class="flex justify-between items-center mt-0.5">
+                                <p class="text-xs text-gray-500 truncate w-4/5">Here are the files you asked for.</p>
+                                <i class="fa-solid fa-check-double text-soft-orange text-[11px]"></i> <!-- Read tick bright orange -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Row 2 -->
+                <div class="relative w-full border-b border-gray-100 overflow-hidden">
+                    <div class="chat-actions bg-red-500 w-32 justify-end items-center pr-4 text-white gap-4">
+                        <button><i class="fa-solid fa-box-archive"></i></button>
+                        <button><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="chat-item flex items-center p-3 cursor-pointer" onclick="openChat('Sarah', 'sms')" onmousedown="initSwipe(event, this)" ontouchstart="initSwipe(event, this)">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 mr-3 border-2 border-sms-green p-0.5"><img src="https://i.pravatar.cc/150?u=2" class="rounded-full w-full h-full"></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center"><h3 class="font-bold text-[15px]">Sarah (SMS)</h3><span class="text-[10px] text-gray-400">Yesterday</span></div>
+                            <div class="flex justify-between items-center mt-0.5">
+                                <p class="text-xs text-gray-500 truncate w-4/5">See you at 5!</p>
+                                <i class="fa-solid fa-check-double text-gray-400 text-[11px]"></i> <!-- Read & receive double tick grey -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Row 3 -->
+                <div class="relative w-full border-b border-gray-100 overflow-hidden">
+                    <div class="chat-item flex items-center p-3 cursor-pointer">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 mr-3 border-2 border-email-yellow p-0.5 flex items-center justify-center text-yellow-500"><i class="fa-solid fa-envelope"></i></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center"><h3 class="font-bold text-[15px]">Boss (Email)</h3><span class="text-[10px] text-gray-400">Mon</span></div>
+                            <div class="flex justify-between items-center mt-0.5">
+                                <p class="text-xs text-gray-500 truncate w-4/5">Project outline attached.</p>
+                                <i class="fa-solid fa-check text-gray-400 text-[11px]"></i> <!-- Received tick grey -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FAB -->
+            <button class="absolute bottom-20 right-4 w-12 h-12 rounded-full bg-soft-orange text-white shadow-xl flex items-center justify-center text-xl z-20" onclick="alert('Find Contact / Add Chat')">
+                <i class="fa-solid fa-plus"></i>
+            </button>
         </section>
 
-        <section>
-            <h2>Home Screen & Navigation</h2>
-            <table>
-                <tr><th>Tab</th><th>Function</th></tr>
-                <tr><td>💬 Chats</td><td>Chat list & contacts</td></tr>
-                <tr><td>🟠 Status</td><td>Stories & updates</td></tr>
-                <tr><td>📞 Calls</td><td>Voice & video calls</td></tr>
-                <tr><td>🤖 AI Search</td><td>Cross-platform AI search</td></tr>
-            </table>
+        <!-- IN-CHAT VIEW -->
+        <section id="view-chat" class="app-view">
+            <!-- Chat Header -->
+            <div class="bg-white border-b border-gray-200 flex items-center justify-between p-3 shadow-sm z-10">
+                <div class="flex items-center gap-3">
+                    <button onclick="closeChat()" class="text-gray-500 text-lg"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden"><img id="chat-avatar" src="https://i.pravatar.cc/150?u=1" class="w-full h-full"></div>
+                    <div>
+                        <h2 id="chat-name" class="font-bold text-sm">Name</h2>
+                        <p class="text-[10px] text-green-500">Online</p>
+                    </div>
+                </div>
+                <!-- 3 Small Bubbles for Service Switching -->
+                <div class="flex gap-2">
+                    <button class="w-6 h-6 rounded-full bg-soft-orange text-white text-[10px] shadow-sm flex items-center justify-center"><i class="fa-solid fa-bolt"></i></button>
+                    <button class="w-6 h-6 rounded-full bg-sms-green text-white text-[10px] shadow-sm flex items-center justify-center opacity-40"><i class="fa-solid fa-comment-sms"></i></button>
+                    <button class="w-6 h-6 rounded-full bg-email-yellow text-white text-[10px] shadow-sm flex items-center justify-center opacity-40"><i class="fa-solid fa-envelope"></i></button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="flex-1 bg-soft-grey p-4 overflow-y-auto flex flex-col gap-3">
+                <div class="bg-white p-3 rounded-2xl rounded-tl-none self-start max-w-[75%] shadow-sm text-sm">Hello! How are you?</div>
+                <div class="bg-soft-orange text-white p-3 rounded-2xl rounded-tr-none self-end max-w-[75%] shadow-sm text-sm flex items-end gap-2">
+                    I'm doing great, thanks! 
+                    <i class="fa-solid fa-check-double text-[10px] text-white/80"></i>
+                </div>
+            </div>
+
+            <!-- Chat Bottom Input -->
+            <div class="bg-white p-2 border-t border-gray-200 flex flex-col">
+                <!-- Attachment Bubbles (Hidden by default) -->
+                <div id="attach-menu" class="hidden flex gap-3 mb-2 p-2 bg-gray-50 rounded-xl overflow-x-auto no-scrollbar">
+                    <button class="flex flex-col items-center gap-1 min-w-[50px]"><div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-lg shadow-sm"><i class="fa-solid fa-file-pdf"></i></div><span class="text-[9px] font-bold text-gray-600">PDF</span></button>
+                    <button class="flex flex-col items-center gap-1 min-w-[50px]"><div class="w-10 h-10 rounded-full bg-purple-100 text-purple-500 flex items-center justify-center text-lg shadow-sm"><i class="fa-solid fa-file-video"></i></div><span class="text-[9px] font-bold text-gray-600">Video</span></button>
+                    <button class="flex flex-col items-center gap-1 min-w-[50px]"><div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-lg shadow-sm"><i class="fa-solid fa-file-audio"></i></div><span class="text-[9px] font-bold text-gray-600">MP3</span></button>
+                    <button class="flex flex-col items-center gap-1 min-w-[50px]"><div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-lg shadow-sm"><i class="fa-solid fa-location-dot"></i></div><span class="text-[9px] font-bold text-gray-600">Location</span></button>
+                    <button class="flex flex-col items-center gap-1 min-w-[50px]"><div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-lg shadow-sm"><i class="fa-solid fa-map"></i></div><span class="text-[9px] font-bold text-gray-600">Maps</span></button>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleAttach()" class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-soft-orange rounded-full bg-gray-100"><i class="fa-solid fa-paperclip"></i></button>
+                    <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-soft-orange" oninput="toggleSendIcon()">
+                    <!-- Send / Voice Switch -->
+                    <button id="btn-voice" class="w-10 h-10 rounded-full bg-soft-orange text-white flex items-center justify-center shadow-md"><i class="fa-solid fa-microphone"></i></button>
+                    <button id="btn-send" class="hidden w-10 h-10 rounded-full bg-soft-orange text-white flex items-center justify-center shadow-md pl-1"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
         </section>
 
-        <section>
-            <h2>Chat Filters</h2>
-            <ul>
-                <li><span style="color: var(--soft-orange)">●</span> <strong>Relay:</strong> Internal messages</li>
-                <li><span style="color: green">●</span> <strong>SMS:</strong> Carrier messages</li>
-                <li><span style="color: gold">●</span> <strong>Email:</strong> Work/Personal mail</li>
-            </ul>
+        <!-- STATUS PAGE -->
+        <section id="view-status" class="app-view bg-black text-white">
+            <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+                <h2 class="font-bold text-lg">Status</h2>
+                <div class="flex gap-4">
+                    <button><i class="fa-solid fa-camera"></i></button>
+                    <button onclick="closeViews()"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+            </div>
+            
+            <div class="flex-1 flex flex-col justify-center items-center relative p-6">
+                <!-- Status Write Area -->
+                <div class="w-full h-[60vh] bg-[#ff7e5f] bg-gradient-to-br from-[#ff7e5f] to-[#feb47b] rounded-3xl flex items-center justify-center shadow-2xl relative overflow-hidden">
+                    <textarea class="bg-transparent w-full h-full p-8 text-center text-3xl font-bold text-white outline-none resize-none placeholder-white/70" placeholder="Type a status..."></textarea>
+                    
+                    <!-- Horizontal small icon selector inside write area -->
+                    <div class="absolute bottom-4 bg-black/30 backdrop-blur-md rounded-full px-4 py-2 flex gap-4 text-lg">
+                        <button><i class="fa-solid fa-palette text-white"></i></button>
+                        <button><i class="fa-solid fa-font text-white"></i></button>
+                        <button><i class="fa-solid fa-face-smile text-white"></i></button>
+                    </div>
+                </div>
+
+                <!-- Add options row -->
+                <div class="flex justify-center gap-6 mt-8">
+                    <button class="flex flex-col items-center gap-2" onclick="alert('Upload Image/10s Video')">
+                        <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-2xl border border-white/50"><i class="fa-solid fa-plus"></i></div>
+                        <span class="text-xs">Add Media</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calendar Reminder & Pin -->
+            <div class="bg-zinc-900 rounded-t-3xl p-5 flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm"><i class="fa-regular fa-calendar-check mr-2 text-soft-orange"></i>Status Calendar</h3>
+                    <button class="text-xs bg-zinc-800 px-3 py-1 rounded-full"><i class="fa-solid fa-thumbtack mr-1"></i>Pin</button>
+                </div>
+                <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                    <div class="bg-soft-orange text-black p-3 rounded-xl min-w-[70px] text-center"><p class="text-xs">Mon</p><p class="font-bold text-lg">12</p></div>
+                    <div class="bg-zinc-800 p-3 rounded-xl min-w-[70px] text-center"><p class="text-xs">Tue</p><p class="font-bold text-lg">13</p></div>
+                    <div class="bg-zinc-800 p-3 rounded-xl min-w-[70px] text-center"><p class="text-xs">Wed</p><p class="font-bold text-lg">14</p></div>
+                    <div class="bg-zinc-800 p-3 rounded-xl min-w-[70px] text-center"><p class="text-xs">Thu</p><p class="font-bold text-lg">15</p></div>
+                </div>
+            </div>
         </section>
 
-        <section>
-            <h2>Message Status Indicators</h2>
-            <table>
-                <tr><th>Status</th><th>Indicator</th></tr>
-                <tr><td>Sent</td><td>Single grey tick</td></tr>
-                <tr><td>Delivered</td><td>Double grey tick</td></tr>
-                <tr><td>Read</td><td style="color: var(--soft-orange); font-weight: bold;">Double orange tick</td></tr>
-            </table>
+        <!-- CALL PAGE -->
+        <section id="view-call" class="app-view bg-soft-grey">
+            <div class="bg-white p-4 shadow-sm flex justify-between items-center">
+                <h2 class="font-bold text-lg">Calls & Rooms</h2>
+                <button onclick="closeViews()"><i class="fa-solid fa-xmark text-xl text-gray-500"></i></button>
+            </div>
+
+            <div class="p-4 flex gap-2">
+                <button class="flex-1 bg-soft-orange text-white py-2 rounded-xl text-sm font-bold shadow-md"><i class="fa-solid fa-wifi mr-2"></i>Call Data</button>
+                <button class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl text-sm font-bold"><i class="fa-solid fa-tower-cell mr-2"></i>Paid Telco</button>
+            </div>
+
+            <div class="px-4 mb-4">
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                    <i class="fa-solid fa-video absolute -right-4 -bottom-4 text-7xl opacity-20"></i>
+                    <h3 class="font-bold text-lg mb-1">Create Meeting Room</h3>
+                    <p class="text-xs opacity-90 mb-4">Freemium Mode - Cross platform support</p>
+                    <div class="flex gap-2">
+                        <button class="bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 rounded-lg text-xs font-bold border border-white/30"><i class="fa-brands fa-google mr-1"></i>Meet</button>
+                        <button class="bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 rounded-lg text-xs font-bold border border-white/30"><i class="fa-solid fa-video mr-1"></i>Zoom</button>
+                        <button class="bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-1.5 rounded-lg text-xs font-bold border border-white/30"><i class="fa-brands fa-microsoft mr-1"></i>Teams</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-4 pb-20">
+                <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase">Recent Calls</h4>
+                <div class="bg-white rounded-2xl p-3 flex justify-between items-center mb-2 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500"><i class="fa-solid fa-user"></i></div>
+                        <div><p class="font-bold text-sm">Design Team</p><p class="text-[10px] text-gray-400"><i class="fa-solid fa-arrow-right text-green-500 mr-1"></i>Video Call - 45 mins</p></div>
+                    </div>
+                    <button class="text-soft-orange w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center"><i class="fa-solid fa-video"></i></button>
+                </div>
+                <div class="bg-white rounded-2xl p-3 flex justify-between items-center shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500"><i class="fa-solid fa-user"></i></div>
+                        <div><p class="font-bold text-sm">+1 998 2341 (Telco)</p><p class="text-[10px] text-gray-400"><i class="fa-solid fa-arrow-left text-red-500 mr-1"></i>Missed</p></div>
+                    </div>
+                    <button class="text-soft-orange w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center"><i class="fa-solid fa-phone"></i></button>
+                </div>
+            </div>
         </section>
 
-        <section>
-            <h2>AI Capabilities</h2>
-            <blockquote>
-                Relay connects to the top 10 AI platforms worldwide, providing 20 free searches per day to all users.
-            </blockquote>
+        <!-- AI SEARCH ENGINE -->
+        <section id="view-ai" class="app-view bg-white">
+            <div class="p-4 flex justify-between items-center border-b border-gray-100">
+                <h2 class="font-black text-xl text-soft-orange"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Relay AI</h2>
+                <button onclick="closeViews()"><i class="fa-solid fa-chevron-down text-xl text-gray-500"></i></button>
+            </div>
+            
+            <div class="p-4">
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Engine Selector</span>
+                        <span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Freemium</span>
+                    </div>
+                    <select class="w-full bg-transparent text-lg font-bold text-gray-800 outline-none cursor-pointer appearance-none">
+                        <option>ChatGPT</option>
+                        <option>Gemini</option>
+                        <option>Grok</option>
+                        <option>Meta AI</option>
+                        <option>Claude</option>
+                        <option>DeepSeek</option>
+                        <option>Gwen</option>
+                    </select>
+                </div>
+                
+                <div class="text-center p-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 text-gray-500">
+                    <p class="text-2xl font-black text-gray-800 mb-1">20</p>
+                    <p class="text-xs font-bold">Daily searches remaining</p>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- AI Chat placeholder -->
+                <div class="text-center mt-10">
+                    <i class="fa-solid fa-robot text-5xl text-gray-200 mb-4"></i>
+                    <p class="text-gray-400 text-sm font-bold">Cross AI Search Engine Platform</p>
+                    <p class="text-gray-400 text-xs mt-1">Ask anything, generate code, or summarize chats.</p>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-100">
+                <div class="bg-gray-100 rounded-2xl p-2 flex items-center shadow-inner">
+                    <input type="text" placeholder="Prompt the AI..." class="flex-1 bg-transparent px-3 text-sm outline-none">
+                    <button class="bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center hover:bg-gray-800"><i class="fa-solid fa-arrow-up"></i></button>
+                </div>
+            </div>
         </section>
 
-    </div>
+    </main>
 
-    <!-- Floating Action Button -->
-    <div class="fab">+</div>
+    <!-- macOS STYLE BOTTOM DOCK -->
+    <footer class="fixed bottom-3 left-1/2 -translate-x-1/2 w-[92%] h-16 macos-dock rounded-3xl flex items-center justify-around px-2 z-[60]">
+        <button onclick="switchTab('view-home')" class="dock-btn flex flex-col items-center justify-center w-14 h-14 rounded-2xl hover:bg-black/5 text-soft-orange transition">
+            <i class="fa-solid fa-comment-dots text-xl mb-1"></i>
+            <span class="text-[9px] font-bold">Chat</span>
+        </button>
+        <button onclick="switchTab('view-status')" class="dock-btn flex flex-col items-center justify-center w-14 h-14 rounded-2xl hover:bg-black/5 text-gray-500 transition">
+            <i class="fa-solid fa-circle-notch text-xl mb-1"></i>
+            <span class="text-[9px] font-bold">Status</span>
+        </button>
+        <button onclick="switchTab('view-call')" class="dock-btn flex flex-col items-center justify-center w-14 h-14 rounded-2xl hover:bg-black/5 text-gray-500 transition relative">
+            <div class="absolute -top-4 bg-white p-2 rounded-full shadow-md border border-gray-100 text-soft-orange">
+                <i class="fa-solid fa-video text-lg"></i>
+            </div>
+            <span class="text-[9px] font-bold mt-5">Call</span>
+        </button>
+        <button onclick="switchTab('view-ai')" class="dock-btn flex flex-col items-center justify-center w-14 h-14 rounded-2xl hover:bg-black/5 text-gray-500 transition">
+            <i class="fa-solid fa-wand-magic-sparkles text-xl mb-1"></i>
+            <span class="text-[9px] font-bold">AI Search</span>
+        </button>
+    </footer>
 
+    <!-- SCRIPTS -->
+    <script>
+        // Camera Trigger
+        function openCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                    alert("Relay Camera App Launched");
+                    stream.getTracks().forEach(track => track.stop());
+                }).catch(() => alert("Camera permission denied"));
+            } else { alert("Camera not supported on this device."); }
+        }
+
+        // 3-Dot Menu Toggle
+        function toggleMenu() {
+            document.getElementById('main-menu').classList.toggle('active');
+        }
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('.relative')) {
+                document.getElementById('main-menu').classList.remove('active');
+            }
+        });
+
+        // Chat Archive Slide Logic
+        let startX = 0;
+        function initSwipe(e, el) {
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            
+            function onMove(moveEvent) {
+                let currentX = moveEvent.type.includes('mouse') ? moveEvent.pageX : moveEvent.touches[0].clientX;
+                let diff = startX - currentX;
+                if (diff > 20 && diff < 140) {
+                    el.style.transform = `translateX(-${diff}px)`;
+                }
+            }
+            
+            function onEnd() {
+                let transformValue = el.style.transform;
+                if (transformValue) {
+                    let val = parseInt(transformValue.replace(/[^\d.]/g, ''));
+                    if (val > 60) el.style.transform = `translateX(-128px)`; // Lock open
+                    else el.style.transform = `translateX(0px)`; // Snap back
+                }
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove);
+            document.addEventListener('touchend', onEnd);
+        }
+
+        // 3-second Pin Logic
+        let pinTimer;
+        function startPin(el) {
+            el.classList.add('pressing');
+            pinTimer = setTimeout(() => {
+                alert("Chat Pinned!");
+                el.classList.remove('pressing');
+            }, 3000);
+        }
+        function cancelPin() {
+            clearTimeout(pinTimer);
+            document.querySelectorAll('.pressing').forEach(el => el.classList.remove('pressing'));
+        }
+
+        // Open/Close Chat
+        function openChat(name, type) {
+            document.getElementById('chat-name').innerText = name;
+            document.getElementById('view-chat').classList.add('active');
+        }
+        function closeChat() {
+            document.getElementById('view-chat').classList.remove('active');
+        }
+
+        // Send/Voice Switch
+        function toggleSendIcon() {
+            const input = document.getElementById('chat-input').value;
+            const btnVoice = document.getElementById('btn-voice');
+            const btnSend = document.getElementById('btn-send');
+            if (input.trim() !== "") {
+                btnVoice.classList.add('hidden');
+                btnSend.classList.remove('hidden');
+            } else {
+                btnVoice.classList.remove('hidden');
+                btnSend.classList.add('hidden');
+            }
+        }
+
+        // Attachment Menu toggle
+        function toggleAttach() {
+            const menu = document.getElementById('attach-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Tab Switching Logic
+        function switchTab(viewId) {
+            closeViews();
+            if(viewId !== 'view-home') {
+                document.getElementById(viewId).classList.add('active');
+            }
+            
+            // Color dock icons
+            document.querySelectorAll('.dock-btn').forEach(btn => {
+                btn.classList.remove('text-soft-orange');
+                btn.classList.add('text-gray-500');
+            });
+            event.currentTarget.classList.add('text-soft-orange');
+            event.currentTarget.classList.remove('text-gray-500');
+        }
+
+        function closeViews() {
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.dock-btn').forEach(btn => {
+                btn.classList.remove('text-soft-orange');
+                btn.classList.add('text-gray-500');
+            });
+            document.querySelector('.dock-btn').classList.add('text-soft-orange'); // Reset to chat
+        }
+    </script>
 </body>
 </html>
